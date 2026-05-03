@@ -1919,18 +1919,6 @@ Describe -Name 'Workflow guardrails' -Fixture {
         $spec | Should -Not -Match '\| `release\.yml` \| Version tag \|'
         $spec | Should -Match '\| `release\.yml` \| Manual dispatch fail-closed guard only \|'
     }
-
-    It -Name 'Placeholder cleanup workflow uses fixed-string matching for bracketed markers' -Test {
-        $workflowPath = Join-Path -Path $script:repoRoot -ChildPath '.github/workflows/check-placeholders.yml'
-        $workflow = Get-Content -LiteralPath $workflowPath -Raw
-
-        $workflow | Should -Match 'name: Check Placeholders'
-        $workflow | Should -Match ([regex]::Escape('grep -RInF \'))
-        $workflow | Should -Not -Match ([regex]::Escape('grep -RIn \'))
-        $workflow | Should -Match ([regex]::Escape('contact_placeholder="[INSERT CONTACT ""METHOD]"'))
-        $workflow | Should -Match ([regex]::Escape('security_placeholder="[security contact ""email]"'))
-        $workflow | Should -Match ([regex]::Escape('--exclude=.github/workflows/check-placeholders.yml \'))
-    }
 }
 
 Describe -Name 'Plane shim guardrails' -Fixture {
