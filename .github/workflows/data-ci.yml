@@ -24,6 +24,7 @@ jobs:
         with:
           python-version: "3.x"
           cache: "pip"
+          cache-dependency-path: ".pre-commit-config.yaml"
 
       - name: Cache pre-commit hooks
         uses: actions/cache@v5
