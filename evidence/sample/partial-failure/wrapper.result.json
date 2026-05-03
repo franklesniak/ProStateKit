@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "1.0.0",
+  "operationId": "sample-partial-failure",
+  "runId": "sample-partial-failure",
+  "mode": "Remediate",
+  "plane": "Local",
+  "bundle": {
+    "name": "ProStateKit",
+    "version": "0.1.0",
+    "sourceCommit": "unknown",
+    "manifestHash": "TBD"
+  },
+  "runtime": {
+    "mode": "PinnedBundle",
+    "path": "runtime/dsc/dsc.exe",
+    "version": "TBD",
+    "expectedHash": "TBD",
+    "observedHash": "TBD"
+  },
+  "config": {
+    "path": "configs/baseline.dsc.yaml",
+    "hash": "TBD"
+  },
+  "startedAt": "2026-05-12T14:15:00Z",
+  "endedAt": "2026-05-12T14:15:12Z",
+  "durationMs": 12000,
+  "startedUtc": "2026-05-12T14:15:00Z",
+  "endedUtc": "2026-05-12T14:15:12Z",
+  "dscVersion": "TBD",
+  "compliant": false,
+  "classification": "Failed",
+  "overall": {
+    "succeeded": false,
+    "compliant": false,
+    "rebootRequired": false
+  },
+  "resources": [
+    {
+      "name": "Controlled local group exists",
+      "type": "Microsoft.Windows/Group",
+      "succeeded": false,
+      "changed": false,
+      "error": "Synthetic sample failure",
+      "rebootRequired": false
+    },
+    {
+      "name": "Baseline-applied marker file",
+      "type": "Microsoft.Windows/File",
+      "succeeded": true,
+      "changed": true,
+      "error": null,
+      "rebootRequired": false
+    }
+  ],
+  "reboot": {
+    "required": false,
+    "signals": []
+  },
+  "exitDecision": {
+    "exitCode": 3,
+    "reason": "ProofFailed"
+  },
+  "evidencePath": "evidence/sample/partial-failure",
+  "errors": [
+    "Synthetic sample failure"
+  ],
+  "warnings": []
+}

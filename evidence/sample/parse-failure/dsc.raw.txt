@@ -1,0 +1,2 @@
+This is synthetic DSC output that is intentionally not JSON.
+It represents a parser failure while preserving the raw payload for review.

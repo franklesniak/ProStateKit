@@ -1,0 +1,18 @@
+name: Release Guard
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-guard:
+    name: Release guard
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fail before publishing
+        run: |
+          echo "::error::Release publishing is disabled until the pinned DSC runtime and bundle dry run are complete."
+          exit 1

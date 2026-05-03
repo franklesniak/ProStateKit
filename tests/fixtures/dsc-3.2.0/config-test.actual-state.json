@@ -1,0 +1,9 @@
+{
+  "actualState": {
+    "instanceName": "LLMNR disabled",
+    "fullyQualifiedTypeName": "Microsoft.Windows/Registry",
+    "compliant": false,
+    "message": "Synthetic noncompliance fixture",
+    "rebootRequired": false
+  }
+}

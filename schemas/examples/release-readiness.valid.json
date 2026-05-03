@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-05-12T14:35:09Z",
+  "repositoryRoot": "C:\\Synthetic\\ProStateKit",
+  "ready": false,
+  "checks": [
+    {
+      "name": "reviewed-pinned-runtime",
+      "passed": false,
+      "evidence": "runtime/dsc/dsc.exe plus reviewed archive payload",
+      "detail": "NEXT-001 requires the reviewed Windows DSC archive payload under runtime/dsc/."
+    },
+    {
+      "name": "dry-release-artifacts",
+      "passed": false,
+      "evidence": "tools/New-Package.ps1 disposable output directory",
+      "detail": "Dry release output must include a ZIP, root bundle.manifest.json, .sha256 file, and a staged bundle verified by src/tools/Test-Bundle.ps1."
+    }
+  ]
+}

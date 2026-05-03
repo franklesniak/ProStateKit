@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "1.0.0",
+  "operationId": "sample-parse-failure",
+  "runId": "sample-parse-failure",
+  "mode": "Detect",
+  "plane": "Local",
+  "bundle": {
+    "name": "ProStateKit",
+    "version": "0.1.0",
+    "sourceCommit": "unknown",
+    "manifestHash": "TBD"
+  },
+  "runtime": {
+    "mode": "PinnedBundle",
+    "path": "runtime/dsc/dsc.exe",
+    "version": "TBD",
+    "expectedHash": "TBD",
+    "observedHash": "TBD"
+  },
+  "config": {
+    "path": "configs/baseline.dsc.yaml",
+    "hash": "TBD"
+  },
+  "startedAt": "2026-05-12T14:20:00Z",
+  "endedAt": "2026-05-12T14:20:02Z",
+  "durationMs": 2000,
+  "startedUtc": "2026-05-12T14:20:00Z",
+  "endedUtc": "2026-05-12T14:20:02Z",
+  "dscVersion": "TBD",
+  "compliant": false,
+  "classification": "Failed",
+  "overall": {
+    "succeeded": false,
+    "compliant": false,
+    "rebootRequired": false
+  },
+  "resources": [
+    {
+      "name": "DSC output parser",
+      "type": "ProStateKit/Internal",
+      "succeeded": false,
+      "changed": false,
+      "error": "Raw DSC output was preserved but could not be parsed as JSON.",
+      "rebootRequired": false
+    }
+  ],
+  "reboot": {
+    "required": false,
+    "signals": []
+  },
+  "exitDecision": {
+    "exitCode": 3,
+    "reason": "ProofFailed"
+  },
+  "evidencePath": "evidence/sample/parse-failure",
+  "errors": [
+    "Raw DSC output was preserved but could not be parsed as JSON."
+  ],
+  "warnings": []
+}

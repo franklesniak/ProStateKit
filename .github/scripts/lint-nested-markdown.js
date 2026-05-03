@@ -20,11 +20,11 @@ const fs = require('fs');
 const path = require('path');
 const { glob } = require('glob');
 const MarkdownIt = require('markdown-it');
-const { lint } = require('markdownlint/promise');
 const jsoncParser = require('jsonc-parser');
 
 // Initialize markdown-it parser
 const md = new MarkdownIt();
+let markdownlintPromiseModule;
 
 // Repository root is two levels up from this script's location in .github/scripts/
 const REPO_ROOT = path.resolve(__dirname, '../..');
@@ -163,6 +163,10 @@ function extractMarkdownFences(filePath) {
  * @returns {Promise<object>} Markdownlint results
  */
 async function lintMarkdownContent(content, config) {
+    if (!markdownlintPromiseModule) {
+        markdownlintPromiseModule = await import('markdownlint/promise');
+    }
+
     // Create a modified config for nested markdown
     // Disable MD041 (first-line-heading) since nested markdown snippets
     // may not start with a top-level heading
@@ -181,7 +185,7 @@ async function lintMarkdownContent(content, config) {
         config: nestedConfig
     };
 
-    return await lint(options);
+    return await markdownlintPromiseModule.lint(options);
 }
 
 /**
@@ -258,7 +262,16 @@ async function main() {
         } else {
             // Find all markdown files (excluding node_modules)
             files = await glob('**/*.md', {
-                ignore: ['node_modules/**', '**/node_modules/**'],
+                ignore: [
+                    'node_modules/**',
+                    '**/node_modules/**',
+                    '.pre-commit-cache/**',
+                    '**/.pre-commit-cache/**',
+                    '.npm-cache/**',
+                    '**/.npm-cache/**',
+                    '.pip-cache/**',
+                    '**/.pip-cache/**'
+                ],
                 cwd: REPO_ROOT,
                 absolute: true
             });

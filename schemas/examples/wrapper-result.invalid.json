@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0",
+  "runId": "20260512-093501-0a1b",
+  "mode": "Remediate",
+  "startedUtc": "2026-05-12T14:35:01Z",
+  "endedUtc": "2026-05-12T14:35:09Z",
+  "overall": {
+    "succeeded": true,
+    "compliant": true,
+    "rebootRequired": false
+  },
+  "resources": []
+}

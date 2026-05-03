@@ -1,0 +1,8 @@
+{
+  "resourceName": "Single resource proof",
+  "resourceType": "ProStateKit/Test",
+  "result": "InDesiredState",
+  "changed": true,
+  "error": null,
+  "rebootRequired": false
+}

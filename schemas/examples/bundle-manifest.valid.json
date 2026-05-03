@@ -1,0 +1,27 @@
+{
+  "name": "ProStateKit",
+  "version": "0.1.0",
+  "schemaVersion": "1.0.0",
+  "dscVersion": "TBD",
+  "builtAt": "TBD",
+  "sourceCommit": "TBD",
+  "wrapperHash": "TBD",
+  "configHash": "TBD",
+  "runtime": {
+    "path": "runtime/dsc/dsc.exe",
+    "expectedHash": "TBD"
+  },
+  "files": [
+    {
+      "path": "src/runner/Runner.ps1",
+      "sha256": "TBD"
+    }
+  ],
+  "validationStatus": "TBD",
+  "supportedPlanes": [
+    "Local",
+    "Intune",
+    "ConfigMgr",
+    "CI"
+  ]
+}

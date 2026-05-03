@@ -1,0 +1,12 @@
+{
+  "results": [
+    {
+      "resourceName": "Controlled local group exists",
+      "resourceType": "Microsoft.Windows/Group",
+      "inDesiredState": true,
+      "wasChanged": true,
+      "errorMessage": null,
+      "rebootRequired": false
+    }
+  ]
+}

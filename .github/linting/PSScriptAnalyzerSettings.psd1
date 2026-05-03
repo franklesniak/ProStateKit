@@ -1,4 +1,4 @@
-# PSScriptAnalyzer Settings for Repository Template
+# PSScriptAnalyzer settings for ProStateKit
 # Enforces OTBS (One True Brace Style) / K&R formatting
 # Aligns with .github/instructions/powershell.instructions.md
 #

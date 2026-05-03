@@ -1,0 +1,12 @@
+{
+  "sample": true,
+  "operation": "set-then-test",
+  "resources": [
+    {
+      "name": "LLMNR disabled",
+      "type": "Microsoft.Windows/Registry",
+      "setSucceeded": true,
+      "verificationInDesiredState": true
+    }
+  ]
+}

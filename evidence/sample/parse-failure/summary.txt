@@ -1,0 +1,5 @@
+State: parse failure
+Mode: Detect
+Exit: 3
+
+The wrapper preserved the raw output in dsc.raw.txt and failed closed because no parseable proof was available.

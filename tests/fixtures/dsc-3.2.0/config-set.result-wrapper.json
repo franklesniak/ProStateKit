@@ -1,0 +1,12 @@
+{
+  "result": [
+    {
+      "name": "Baseline-applied marker file",
+      "type": "Microsoft.Windows/File",
+      "result": "Succeeded",
+      "changed": true,
+      "message": null,
+      "rebootRequired": false
+    }
+  ]
+}

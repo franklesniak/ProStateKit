@@ -1,0 +1,5 @@
+State: remediated and verified
+Mode: Remediate
+Exit: 0
+
+The set operation completed and the required verification test proved compliance afterward. The wrapper did not rely on the DSC process exit code alone.

@@ -46,8 +46,13 @@ jobs:
         continue-on-error: true
         run: npm run lint:md:nested
 
+      - name: Run local Markdown link lint
+        id: lint-links
+        continue-on-error: true
+        run: npm run lint:md:links
+
       - name: Check linting results
-        if: steps.lint-outer.outcome == 'failure' || steps.lint-nested.outcome == 'failure'
+        if: steps.lint-outer.outcome == 'failure' || steps.lint-nested.outcome == 'failure' || steps.lint-links.outcome == 'failure'
         run: |
           echo "::error::Markdown linting failed. Check the logs above for details."
           exit 1

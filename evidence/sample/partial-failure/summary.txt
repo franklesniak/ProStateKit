@@ -1,0 +1,5 @@
+State: partial convergence failure
+Mode: Remediate
+Exit: 1
+
+At least one resource failed, so the wrapper decision is failure even though another resource changed successfully. Partial convergence never returns green.

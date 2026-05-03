@@ -1,0 +1,287 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/franklesniak/ProStateKit/schemas/wrapper-result.schema.json",
+  "title": "ProStateKit wrapper result",
+  "description": "Additive schema for normalized ProStateKit wrapper evidence written to wrapper.result.json.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "operationId",
+    "runId",
+    "mode",
+    "plane",
+    "bundle",
+    "runtime",
+    "config",
+    "startedAt",
+    "endedAt",
+    "durationMs",
+    "startedUtc",
+    "endedUtc",
+    "dscVersion",
+    "compliant",
+    "classification",
+    "overall",
+    "resources",
+    "reboot",
+    "exitDecision",
+    "evidencePath",
+    "errors",
+    "warnings"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "operationId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "Detect",
+        "Remediate"
+      ]
+    },
+    "plane": {
+      "type": "string",
+      "enum": [
+        "Local",
+        "Intune",
+        "ConfigMgr",
+        "CI"
+      ]
+    },
+    "bundle": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "name",
+        "version",
+        "sourceCommit",
+        "manifestHash"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceCommit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifestHash": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "mode",
+        "path",
+        "version",
+        "expectedHash",
+        "observedHash"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "PinnedBundle",
+            "InstalledPath",
+            "LabLatest"
+          ]
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expectedHash": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observedHash": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "path",
+        "hash"
+      ],
+      "properties": {
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hash": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "endedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "durationMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "startedUtc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "endedUtc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "dscVersion": {
+      "type": "string"
+    },
+    "compliant": {
+      "type": "boolean"
+    },
+    "classification": {
+      "type": "string",
+      "enum": [
+        "Compliant",
+        "NonCompliant",
+        "Failed"
+      ]
+    },
+    "overall": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "succeeded",
+        "compliant",
+        "rebootRequired"
+      ],
+      "properties": {
+        "succeeded": {
+          "type": "boolean"
+        },
+        "compliant": {
+          "type": "boolean"
+        },
+        "rebootRequired": {
+          "type": "boolean"
+        }
+      }
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "name",
+          "type",
+          "succeeded",
+          "changed",
+          "error",
+          "rebootRequired"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "succeeded": {
+            "type": "boolean"
+          },
+          "changed": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rebootRequired": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "reboot": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "required",
+        "signals"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "signals": {
+          "type": "array"
+        }
+      }
+    },
+    "exitDecision": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "exitCode",
+        "reason"
+      ],
+      "properties": {
+        "exitCode": {
+          "type": "integer"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "evidencePath": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "errors": {
+      "type": "array"
+    },
+    "warnings": {
+      "type": "array"
+    }
+  }
+}

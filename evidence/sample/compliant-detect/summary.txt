@@ -1,0 +1,5 @@
+State: compliant
+Mode: Detect
+Exit: 0
+
+All normalized resource results succeeded and reported desired state. Full raw DSC output is preserved in dsc.raw.json, and the stable wrapper decision is preserved in wrapper.result.json.

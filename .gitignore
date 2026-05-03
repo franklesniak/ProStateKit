@@ -1,26 +1,28 @@
 # Dependencies
 node_modules/
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
+# Local environments and caches
 .venv/
 venv/
 .env
-*.egg-info/
-dist/
-build/
-.eggs/
-.pytest_cache/
 .cache/
-.coverage
-coverage.xml
-htmlcov/
-.mypy_cache/
+.npm-cache/
+.pip-cache/
+.codex/
 
 # Pre-commit
 .pre-commit-cache/
+
+# ProStateKit runtime artifacts
+*.zip
+BaselineBundle/Runtime/
+ProStateKitBundle/
+evidence/runtime/
+**/Runs/
+*.transcript.log
+build/
+dist/
+out/
 
 # OS files
 .DS_Store

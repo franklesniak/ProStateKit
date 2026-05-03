@@ -1,24 +1,36 @@
 {
-  "name": "copilot-repo-template",
-  "version": "1.0.0",
-  "description": "Template repository with Copilot instructions and code quality tooling",
+  "name": "prostatekit",
+  "version": "0.1.0",
+  "description": "Starter kit for reliable endpoint state with DSC v3 execution templates, evidence, validation, and management-plane wrappers.",
   "private": true,
   "scripts": {
-    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
-    "lint:md:nested": "node .github/scripts/lint-nested-markdown.js"
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.pre-commit-cache\" \"#.npm-cache\" \"#.pip-cache\"",
+    "lint:md:nested": "node .github/scripts/lint-nested-markdown.js",
+    "lint:md:links": "node .github/scripts/lint-markdown-links.js",
+    "validate": "pwsh -NoProfile -File tools/Invoke-Validation.ps1"
   },
   "keywords": [
-    "template",
-    "copilot",
-    "linting"
+    "dsc",
+    "dsc-v3",
+    "powershell",
+    "intune",
+    "configmgr",
+    "endpoint-state",
+    "endpoint-management",
+    "desired-state-configuration",
+    "automation",
+    "remediation",
+    "compliance",
+    "evidence"
   ],
-  "author": "Frank Lesniak",
+  "author": "Frank Lesniak and Blake Cherry",
   "license": "MIT",
   "engines": {
     "node": ">=20.0.0"
   },
   "devDependencies": {
     "glob": "^13.0.6",
+    "js-yaml": "^4.1.1",
     "jsonc-parser": "^3.3.1",
     "markdown-it": "^14.1.1",
     "markdownlint": "^0.40.0",

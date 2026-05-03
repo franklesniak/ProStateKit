@@ -1,0 +1,17 @@
+{
+  "sample": true,
+  "operation": "set-then-test",
+  "resources": [
+    {
+      "name": "Controlled local group exists",
+      "type": "Microsoft.Windows/Group",
+      "setSucceeded": false,
+      "message": "Synthetic sample failure"
+    },
+    {
+      "name": "Baseline-applied marker file",
+      "type": "Microsoft.Windows/File",
+      "setSucceeded": true
+    }
+  ]
+}

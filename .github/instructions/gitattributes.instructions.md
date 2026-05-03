@@ -48,9 +48,9 @@ tests/**/golden/*.json text eol=lf
 
 A blanket rule such as `* text=auto` **MUST NOT** be treated as a substitute for per-path `eol=lf` pinning. `text=auto` lets Git auto-detect text files and normalize to LF in the repository, but it does **not** force LF on Windows checkouts when `core.autocrlf=true` is in effect: Git still applies the working-tree line-ending conversion configured on the host and can rewrite LF to CRLF on checkout. Only explicit `eol=lf` on an artifact path guarantees that the bytes in the working tree match the bytes in the repository on every platform.
 
-## Defaults Shipped by This Template
+## Defaults
 
-This template ships a repo-root `.gitattributes` file with LF-pinning defaults for common byte-exact fixture locations:
+This repository ships a repo-root `.gitattributes` file with LF-pinning defaults for common byte-exact fixture locations:
 
 - `tests/**/golden/**`
 - `tests/**/goldens/**`
@@ -61,7 +61,7 @@ This template ships a repo-root `.gitattributes` file with LF-pinning defaults f
 
 These paths are assumed to contain **text** fixtures. To keep the defaults safe when binary assets are committed under the same directories (for example, `.png` screenshots under `__snapshots__/`), the shipped `.gitattributes` also declassifies a curated list of common binary extensions (images, documents and archives, compiled artifacts, audio and video, fonts) using the `binary` macro so that Git does not apply line-ending conversion to them.
 
-Downstream adopters **MUST** extend these entries whenever they introduce a new byte-exact fixture location that is not already covered (for example, a project-specific `expected/` directory, a `golden_files/` tree, or signed payloads under a custom path). New entries **SHOULD** follow the "as narrow as practical" guidance above. Existing template entries **SHOULD NOT** be removed unless the maintainer has confirmed that no byte-exact comparison exists in the repository that depends on those paths.
+Maintainers **MUST** extend these entries whenever they introduce a new byte-exact fixture location that is not already covered (for example, a project-specific `expected/` directory, a `golden_files/` tree, or signed payloads under a custom path). New entries **SHOULD** follow the "as narrow as practical" guidance above. Existing entries **SHOULD NOT** be removed unless the maintainer has confirmed that no byte-exact comparison exists in the repository that depends on those paths.
 
 ### Excluding Binary Files Under Fixture Paths
 
@@ -73,7 +73,7 @@ tests/**/snapshots/**    text eol=lf
 *.zip                    binary
 ```
 
-The shipped `.gitattributes` already declassifies a curated list of common binary extensions. Adopters **SHOULD** extend that list if they commit binary fixtures in formats not covered (for example, custom binary serialization formats, proprietary container formats, or simulator traces stored as opaque blobs). A narrower path-scoped form **MAY** be used (for example, `tests/**/fixtures/*.bin binary`) when a binary extension is project-specific and scoping it globally would be too broad.
+The shipped `.gitattributes` already declassifies a curated list of common binary extensions. Maintainers **SHOULD** extend that list if they commit binary fixtures in formats not covered (for example, custom binary serialization formats, proprietary container formats, or simulator traces stored as opaque blobs). A narrower path-scoped form **MAY** be used (for example, `tests/**/fixtures/*.bin binary`) when a binary extension is project-specific and scoping it globally would be too broad.
 
 ## Interaction With Language-Specific Producer/Consumer Rules
 
@@ -83,7 +83,7 @@ The Git-layer rule defined here is necessary but not sufficient for byte-exact s
 - Tools that **compare** fixtures **SHOULD** read bytes in a mode that does not perform its own newline translation (for example, binary mode) when the comparison is byte-exact.
 - Hashing and signing tools **SHOULD** operate on raw bytes and **MUST NOT** depend on on-disk text normalization.
 
-These language-specific concerns are out of scope for this instructions file; they are addressed in the relevant language instructions (for example, `python.instructions.md`, `powershell.instructions.md`). The Git-layer rule and the producer/consumer rules are complementary: each alone is insufficient, and both are needed for stable byte-exact artifacts across platforms.
+These language-specific concerns are out of scope for this instructions file; they are addressed in the relevant language instructions, especially `powershell.instructions.md` for ProStateKit runtime scripts. The Git-layer rule and the producer/consumer rules are complementary: each alone is insufficient, and both are needed for stable byte-exact artifacts across platforms.
 
 ## Rationale
 

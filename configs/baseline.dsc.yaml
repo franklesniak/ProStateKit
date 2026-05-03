@@ -1,0 +1,26 @@
+# Compatibility sample for the layout sketched in ProStateKit.md.
+# ProStateKit sample DSC configuration for lab use only.
+# Review resource types, property names, and desired state before any production use.
+# The source-of-truth scaffold configuration lives at src/configs/baseline.windows.yaml.
+directives:
+  description: ProStateKit Windows endpoint baseline (sample)
+  version: "0.1.0"
+  requireVersion: "TBD"
+resources:
+  - name: Controlled local group exists
+    type: Microsoft.Windows/Group # TODO: confirm exact type with pinned DSC resource version.
+    properties:
+      groupName: Baseline-ControlledLocal
+      members: []
+  - name: LLMNR disabled
+    type: Microsoft.Windows/Registry # TODO: confirm exact type with pinned DSC resource version.
+    properties:
+      keyPath: 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient'
+      valueName: EnableMulticast
+      valueData: 0
+      valueType: REG_DWORD
+  - name: Baseline-applied marker file
+    type: Microsoft.Windows/File # TODO: confirm exact type with pinned DSC resource version.
+    properties:
+      path: 'C:\ProgramData\ProStateKit\Baseline\baseline-applied.txt'
+      ensure: Present

@@ -1,0 +1,12 @@
+{
+  "resources": [
+    {
+      "name": "Baseline-applied marker file",
+      "type": "Microsoft.Windows/File",
+      "succeeded": true,
+      "changed": true,
+      "error": null,
+      "rebootRequired": false
+    }
+  ]
+}

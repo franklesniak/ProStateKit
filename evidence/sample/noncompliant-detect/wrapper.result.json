@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "1.0.0",
+  "operationId": "sample-noncompliant-detect",
+  "runId": "sample-noncompliant-detect",
+  "mode": "Detect",
+  "plane": "Local",
+  "bundle": {
+    "name": "ProStateKit",
+    "version": "0.1.0",
+    "sourceCommit": "unknown",
+    "manifestHash": "TBD"
+  },
+  "runtime": {
+    "mode": "PinnedBundle",
+    "path": "runtime/dsc/dsc.exe",
+    "version": "TBD",
+    "expectedHash": "TBD",
+    "observedHash": "TBD"
+  },
+  "config": {
+    "path": "configs/baseline.dsc.yaml",
+    "hash": "TBD"
+  },
+  "startedAt": "2026-05-12T14:05:00Z",
+  "endedAt": "2026-05-12T14:05:03Z",
+  "durationMs": 3000,
+  "startedUtc": "2026-05-12T14:05:00Z",
+  "endedUtc": "2026-05-12T14:05:03Z",
+  "dscVersion": "TBD",
+  "compliant": false,
+  "classification": "NonCompliant",
+  "overall": {
+    "succeeded": true,
+    "compliant": false,
+    "rebootRequired": false
+  },
+  "resources": [
+    {
+      "name": "LLMNR disabled",
+      "type": "Microsoft.Windows/Registry",
+      "succeeded": true,
+      "changed": false,
+      "error": null,
+      "rebootRequired": false
+    }
+  ],
+  "reboot": {
+    "required": false,
+    "signals": []
+  },
+  "exitDecision": {
+    "exitCode": 1,
+    "reason": "ProofNonCompliant"
+  },
+  "evidencePath": "evidence/sample/noncompliant-detect",
+  "errors": [],
+  "warnings": []
+}

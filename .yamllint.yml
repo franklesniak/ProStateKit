@@ -1,10 +1,10 @@
 # yamllint configuration
 #
-# Aligned with the full template baseline. The `truthy.check-keys: false`
-# setting is intentional so GitHub Actions workflow files can use the
-# idiomatic unquoted `on:` key without yamllint flagging it as a truthy
-# value. See `.github/TEMPLATE_DESIGN_DECISIONS.md` for the rationale
-# behind this default and the related `line-length` warning level.
+# The `truthy.check-keys: false` setting is intentional so GitHub Actions
+# workflow files can use the idiomatic unquoted `on:` key without yamllint
+# flagging it as a truthy value. The line-length rule is a warning because
+# schema descriptions, issue-form text, and documentation links often exceed
+# 120 characters and are better reviewed in context.
 #
 # See https://yamllint.readthedocs.io/en/stable/configuration.html
 extends: default
@@ -32,9 +32,6 @@ rules:
     max: 120
     allow-non-breakable-words: true
     allow-non-breakable-inline-mappings: true
-    # Kept at `warning` instead of the default `error`. See
-    # `.github/TEMPLATE_DESIGN_DECISIONS.md` →
-    # "yamllint line-length Warning Level Default" for the rationale.
     level: warning
   new-line-at-end-of-file: enable
   trailing-spaces: enable

@@ -1,0 +1,12 @@
+{
+  "resources": [
+    {
+      "name": "LLMNR disabled",
+      "type": "Microsoft.Windows/Registry",
+      "succeeded": false,
+      "changed": false,
+      "error": "Synthetic drift fixture",
+      "rebootRequired": false
+    }
+  ]
+}

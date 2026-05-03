@@ -1,0 +1,5 @@
+State: non-compliant
+Mode: Detect
+Exit: 1
+
+DSC test output was parseable, but the normalized decision reported drift. A management plane such as Intune Remediations would treat this as the signal to run remediation.

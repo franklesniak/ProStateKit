@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/franklesniak/ProStateKit/schemas/release-readiness.schema.json",
+  "title": "ProStateKit release readiness report",
+  "description": "Schema for the fail-closed release readiness report emitted by Test-ReleaseReadiness.ps1.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "repositoryRoot",
+    "ready",
+    "checks"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "repositoryRoot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ready": {
+      "type": "boolean"
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "name",
+          "passed",
+          "evidence",
+          "detail"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "reviewed-pinned-runtime",
+              "runtime-reviewer-signoff",
+              "dry-release-artifacts",
+              "local-demo-rehearsals",
+              "intune-lab-validation",
+              "configmgr-lab-validation",
+              "public-flip-tasks",
+              "deck-reconciled-to-real-evidence",
+              "final-dsc-release-recheck"
+            ]
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "evidence": {
+            "type": "string",
+            "minLength": 1
+          },
+          "detail": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

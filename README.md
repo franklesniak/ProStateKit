@@ -1,312 +1,110 @@
-# Project Name
+<!-- markdownlint-disable MD013 -->
+# ProStateKit
 
-> **Note:** This repository was created from [`franklesniak/copilot-repo-template`](https://github.com/franklesniak/copilot-repo-template).
+ProStateKit is a starter kit for reliable endpoint state with DSC v3. It provides reusable runner templates, evidence schemas, sample DSC configuration documents, validation tooling, and management-plane wrappers for Intune and ConfigMgr. It is a starter kit teams can fork and standardize, not a finished product.
 
-## Description
+> Built and validated against `dsc.exe` version: TBD (to be pinned before MMSMOA 2026).
 
-[Add your project description here]
+This repository was created from Frank Lesniak's Copilot repository template and then tailored for ProStateKit.
 
----
+## What ProStateKit Is
 
-## Table of Contents
+ProStateKit is a preview starter kit for endpoint engineers who need a repeatable contract around DSC v3 runs. The kit separates the management plane from the desired-state payload, preserves raw DSC output, normalizes wrapper-owned evidence, and fails closed when proof is missing.
 
-- [Readme for the Copilot Repository Template](#readme-for-the-copilot-repository-template)
-  - [What This Template Provides](#what-this-template-provides)
-  - [Getting Started](#getting-started)
-  - [Repository Structure](#repository-structure)
-  - [Language Support](#language-support)
-  - [Linting Tools](#linting-tools)
-  - [Testing](#testing)
-  - [Code Quality](#code-quality)
-  - [License](#license)
+## What ProStateKit Is Not
 
----
+ProStateKit is not a replacement for Intune, ConfigMgr, Azure Machine Configuration, Jamf, Apple MDM/DDM, or patch-management platforms. It is not production-ready, does not ship a pinned DSC runtime yet, and must not be treated as a finished management agent.
 
-## Readme for the Copilot Repository Template
+## Native-First Decision Rule
 
-This is a template repository providing best-practice GitHub Copilot instructions and linting configurations for new projects.
+Use native CSPs, Settings Catalog, ConfigMgr Compliance Baselines, or another platform-native feature when they fully meet the requirement. Reach for ProStateKit when the requirement needs exact drift control, ordered convergence, portability across execution planes, code review, or durable evidence.
 
-### What This Template Provides
+## Execution Plane Vs. DSC V3 Payload
 
-This template includes:
+The execution plane owns delivery, scheduling, identity, retry behavior, reporting, and reboot orchestration. DSC v3 owns desired state, test, set, and structured result output. ProStateKit's Runner is the contract boundary between those responsibilities.
 
-- **GitHub Copilot Instructions:** Comprehensive coding standards that guide AI-assisted development
-- **Multi-Agent Support:** Instruction files for Claude Code, OpenAI Codex CLI, and Gemini Code Assist (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`)
-- **Language-Specific Guidelines:** Modular instruction files for Markdown, PowerShell, Python, Terraform, JSON/JSONC, and YAML
-- **Linting Configurations:** Pre-configured settings for markdownlint, PSScriptAnalyzer, TFLint, and yamllint
-- **Data-File Validation:** Pre-commit hooks for `check-json`, `check-yaml`, `yamllint`, and `actionlint` (GitHub Actions workflows)
-- **JSON Schemas:** Root-level `schemas/` directory convention for schema-backed JSON and YAML files
-- **Pre-commit Hooks:** Automated code quality checks before commits
+## Execution Template Overview
 
-### Getting Started
+The public entry point is [src/Invoke-ProStateKit.ps1](src/Invoke-ProStateKit.ps1), backed by the common Runner at [src/runner/Runner.ps1](src/runner/Runner.ps1). Detect mode maps to `dsc config test`. Remediate mode maps to `dsc config set`, followed by a verification `dsc config test`. The Runner currently implements path validation, runtime-mode resolution, DSC invocation when a runtime is present, raw output preservation, normalization, evidence writing, current-result updates, and fail-closed exit codes.
 
-Choose the guide that matches your situation:
+## Supported Management Planes
 
-- **[Creating a New Repository](GETTING_STARTED_NEW_REPO.md)**: Step-by-step guide for creating a new repository from this template
-- **[Adding to an Existing Repository](GETTING_STARTED_EXISTING_REPO.md)**: Guide for adopting template features into an existing repository
-- **[Optional Configurations](OPTIONAL_CONFIGURATIONS.md)**: Advanced customization options after initial setup
+- Intune Remediations: [planes/intune/Detect-ProStateKit.ps1](planes/intune/Detect-ProStateKit.ps1) and [planes/intune/Remediate-ProStateKit.ps1](planes/intune/Remediate-ProStateKit.ps1).
+- ConfigMgr Configuration Items: [planes/configmgr/Discover-ProStateKit.ps1](planes/configmgr/Discover-ProStateKit.ps1) and [planes/configmgr/Remediate-ProStateKit.ps1](planes/configmgr/Remediate-ProStateKit.ps1).
+- Local preflight: [planes/local/Invoke-LocalPreflight.ps1](planes/local/Invoke-LocalPreflight.ps1).
+- CI/lab runner: PowerShell tests, schema linting, data validation, and fixture compatibility checks.
 
-For template maintainers, see [TEMPLATE_MAINTENANCE.md](TEMPLATE_MAINTENANCE.md).
+## Bundle Layout
 
-### Repository Structure
+The source scaffold uses `src/`, `planes/`, `configs/`, `runtime/`, `resources/`, `schemas/`, `docs/`, and `evidence/sample/`. The release bundle layout is documented in [docs/packaging.md](docs/packaging.md). Packaging fails closed until a reviewed DSC runtime exists under `runtime/dsc/`.
 
-```text
-.github/
-├── CODEOWNERS                       # Code ownership for automatic PR review requests
-├── copilot-instructions.md          # Repo-wide constitution for all changes
-├── dependabot.yml                   # Automated dependency updates configuration
-├── instructions/                    # Language-specific coding standards
-│   ├── docs.instructions.md         # Markdown/documentation standards
-│   ├── gitattributes.instructions.md # .gitattributes authoring standards
-│   ├── json.instructions.md         # JSON/JSONC authoring standards
-│   ├── powershell.instructions.md   # PowerShell coding standards
-│   ├── python.instructions.md       # Python coding standards
-│   ├── terraform.instructions.md    # Terraform coding standards
-│   └── yaml.instructions.md         # YAML authoring standards
-├── linting/                         # Linting tool configurations
-│   └── PSScriptAnalyzerSettings.psd1  # PowerShell linting settings
-├── scripts/                         # Helper scripts for CI/tooling
-└── workflows/                       # GitHub Actions workflows
-    ├── auto-fix-precommit.yml        # Auto-fix pre-commit on copilot/** pushes (optional)
-    ├── check-placeholders.yml       # Verifies OWNER/REPO placeholders are replaced
-    ├── data-ci.yml                   # JSON/YAML/Actions data-file linting CI
-    ├── markdownlint.yml              # Markdown linting CI (markdownlint)
-    ├── powershell-ci.yml             # PowerShell linting and testing CI (optional)
-    ├── python-ci.yml                 # Python linting and testing CI (optional)
-    └── terraform-ci.yml              # Terraform format, validate, lint, test, security CI (optional)
+## Evidence Model
 
-src/
-└── copilot_repo_template/           # Example Python package (rename for your project)
-    ├── __init__.py
-    └── example.py
+Every run MUST preserve raw DSC output before normalization. The stable automation contract is `wrapper.result.json`, described by [schemas/wrapper-result.schema.json](schemas/wrapper-result.schema.json) and [docs/evidence-schema.md](docs/evidence-schema.md). Synthetic examples live under [evidence/sample](evidence/sample).
 
-tests/                               # Test directory
-├── __init__.py
-├── test_example.py                  # Python pytest tests
-└── PowerShell/                      # PowerShell Pester tests
-    └── Placeholder.Tests.ps1
+## Exit-Code Model
 
-templates/                           # Reference templates for project setup
-├── python/                          # Python project templates
-└── powershell/                      # PowerShell test templates
-    └── Example.Tests.ps1            # Comprehensive Pester test example
+Detect exits `0` for compliant, `1` for non-compliant, `2` for runtime failure, and `3` for parse failure or proof missing. Remediate exits `0` only after verification proves compliance. Details are in [docs/exit-codes.md](docs/exit-codes.md).
 
-schemas/                             # JSON Schemas for load-bearing JSON/YAML files (Draft 2020-12)
+## Reboot Model
 
-pyproject.toml                       # Python project configuration
-.markdownlint.jsonc                  # Markdown linting configuration
-.yamllint.yml                        # YAML linting configuration
-.pre-commit-config.yaml              # Pre-commit hooks (multi-language)
-AGENTS.md                            # Agent instructions for OpenAI Codex CLI
-CLAUDE.md                            # Agent instructions for Claude Code
-GEMINI.md                            # Agent instructions for Gemini Code Assist
-```
+The execution plane owns reboot orchestration. The Runner writes `reboot.marker.json` when normalized proof reports `rebootRequired`; lab-validated cleanup and platform-specific reboot orchestration remain documented in [docs/reboots.md](docs/reboots.md).
 
-#### Key Files Explained
+## Secrets Rule
 
-| File | Purpose |
-| --- | --- |
-| `.github/CODEOWNERS` | Defines code ownership for automatic PR review requests - replace `@OWNER` placeholder |
-| `.github/copilot-instructions.md` | The "constitution" for all code changes - defines safety rules, pre-commit discipline, and references language-specific instructions |
-| `.github/dependabot.yml` | Dependabot configuration for automated dependency updates - enabled by default |
-| `.github/instructions/*.md` | Language-specific coding standards applied based on file patterns |
-| `.github/linting/PSScriptAnalyzerSettings.psd1` | PSScriptAnalyzer settings enforcing OTBS formatting for PowerShell |
-| `.github/workflows/auto-fix-precommit.yml` | Automatically commits pre-commit auto-fixes on pushes to `copilot/**` branches by the Copilot coding agent (optional - remove if not using the Copilot coding agent) |
-| `.github/workflows/check-placeholders.yml` | CI workflow to verify OWNER/REPO and @OWNER placeholders are replaced after cloning |
-| `.github/workflows/data-ci.yml` | Data-file (JSON/YAML/GitHub Actions) linting CI workflow — runs `check-json`, `check-yaml`, `yamllint`, and `actionlint` as a dedicated check that can be required via branch protection |
-| `.github/workflows/markdownlint.yml` | Markdown linting CI workflow (uses [markdownlint](https://github.com/DavidAnson/markdownlint)) |
-| `.github/workflows/powershell-ci.yml` | PowerShell linting and Pester testing CI workflow (optional - remove if not using PowerShell) |
-| `.github/workflows/python-ci.yml` | Python linting and testing CI workflow (optional - remove if not using Python) |
-| `.github/workflows/terraform-ci.yml` | Terraform format, validate, lint, test, and security CI workflow (optional - remove if not using Terraform) |
-| `.markdownlint.jsonc` | Markdown linting rules prioritizing auto-fixable checks |
-| `.yamllint.yml` | YAML linting configuration (2-space indentation, max line length 120 as warning, unquoted GitHub Actions `on:` allowed) |
-| `.pre-commit-config.yaml` | Pre-commit hooks for all projects (multi-language) |
-| `schemas/` | Root-level JSON Schemas (Draft 2020-12) describing load-bearing JSON and YAML files |
-| `AGENTS.md` | Minimal agent entry point instructions for OpenAI Codex CLI and GitHub Copilot coding agent |
-| `CLAUDE.md` | Minimal agent entry point instructions plus Claude-specific workflow guidance |
-| `GEMINI.md` | Minimal agent entry point instructions for Gemini Code Assist and GitHub Copilot coding agent |
-| `pyproject.toml` | Python project configuration with dev dependencies |
-| `src/copilot_repo_template/` | Example Python package - rename for your project |
-| `tests/` | Test directory with pytest tests (Python) and Pester tests (PowerShell) |
-| `templates/powershell/Example.Tests.ps1` | Comprehensive Pester test template with examples |
+Do not put secrets in configuration documents, examples, logs, transcripts, stdout, normalized evidence, or raw evidence. Runtime retrieval patterns are documented in [docs/secrets.md](docs/secrets.md), and [src/tools/SecretHelper.ps1](src/tools/SecretHelper.ps1) fails closed until implemented.
 
-### Language Support
+## Validation And CI
 
-| Language | Instruction File | File Pattern | CI Workflow | Description |
-| --- | --- | --- | --- | --- |
-| JSON/JSONC | `.github/instructions/json.instructions.md` | `**/*.json`, `**/*.jsonc` | `.github/workflows/data-ci.yml` (`check-json` on `.json`; `.jsonc` not validated) | JSON authoring standards (strict, schema-backed, deterministic) |
-| Markdown/Docs | `.github/instructions/docs.instructions.md` | `**/*.md` | `.github/workflows/markdownlint.yml` | Documentation writing standards |
-| PowerShell | `.github/instructions/powershell.instructions.md` | `**/*.ps1` | `.github/workflows/powershell-ci.yml` | PowerShell coding standards (OTBS, v1.0-v7.x) |
-| Python | `.github/instructions/python.instructions.md` | `**/*.py` | `.github/workflows/python-ci.yml` | Python coding standards (PEP 8, typing) |
-| Terraform | `.github/instructions/terraform.instructions.md` | `**/*.tf`, `**/*.tfvars`, `**/*.tftest.hcl`, etc. | `.github/workflows/terraform-ci.yml` | Terraform coding standards (HCL, modules) |
-| YAML | `.github/instructions/yaml.instructions.md` | `**/*.yml`, `**/*.yaml` | `.github/workflows/data-ci.yml` (`check-yaml`, `yamllint`; `actionlint` for workflows only) | YAML authoring standards (explicit, conservative, schema-backed) |
-
-> **JSON note:** `check-json` validates strict `.json` only; it does **not** validate `.jsonc`. JSONC is allowed where the consuming tool supports it, and stricter enforcement requires JSONC-aware tooling.
->
-> **Schemas:** JSON Schemas for load-bearing JSON and YAML files live at the repository root under `schemas/` (not `.github/schemas/`). See [`schemas/README.md`](schemas/README.md) for conventions.
-
-### Linting Tools
-
-This template organizes linting configurations in `.github/linting/` (for PSScriptAnalyzer) and the repository root (for markdownlint). Projects MAY reorganize these configurations to a different location (e.g., a project-specific `config/` directory) if preferred. If configurations are moved, update the paths referenced in CI workflows and `.github/copilot-instructions.md` accordingly.
-
-#### Markdown Linting
-
-Configuration: `.markdownlint.jsonc`
+Run these checks before committing:
 
 ```bash
-# Check markdown files
+npm run validate
 npm run lint:md
-
-# Auto-fix issues
-npx markdownlint-cli2 "**/*.md" "#node_modules" --fix
+pre-commit run --all-files
 ```
 
-#### PowerShell Linting (PSScriptAnalyzer)
-
-Configuration: `.github/linting/PSScriptAnalyzerSettings.psd1`
+Run PowerShell tests with:
 
 ```powershell
-# Check PowerShell files
-Invoke-ScriptAnalyzer -Path .\script.ps1 -Settings .\.github\linting\PSScriptAnalyzerSettings.psd1
-
-# Auto-fix formatting issues
-Invoke-ScriptAnalyzer -Path .\script.ps1 -Settings .\.github\linting\PSScriptAnalyzerSettings.psd1 -Fix
-```
-
-#### Python Linting
-
-Configuration: `.pre-commit-config.yaml`
-
-```bash
-# Run all pre-commit hooks
-pre-commit run --all-files
-
-# Run specific hooks
-pre-commit run black --all-files
-pre-commit run ruff-check --all-files
-```
-
-#### JSON, YAML, and GitHub Actions Linting
-
-JSON, YAML, and GitHub Actions workflow validation runs through pre-commit hooks. Configuration: `.pre-commit-config.yaml` (and `.yamllint.yml` for `yamllint`).
-
-- **`check-json`** — strict `.json` syntax validation. Does **not** validate `.jsonc`; use JSONC-aware tooling if you need stricter enforcement for `.jsonc` files.
-- **`check-yaml`** — `.yml` / `.yaml` parse check.
-- **`yamllint`** — YAML style enforcement per `.yamllint.yml`.
-- **`actionlint`** — GitHub Actions workflow linting.
-- **`check-jsonschema`** — JSON Schema validation, scoped to the worked-example schema's valid example data under `schemas/examples/example-config/valid/`. Downstream repositories MAY add additional `check-jsonschema` hook entries for their own schema-backed file families.
-- **`check-metaschema`** — self-validates the worked-example schema (`schemas/example-config.schema.json`) against its declared JSON Schema Draft 2020-12 metaschema.
-
-Prettier is **opt-in** and is not part of the default data-file toolchain.
-
-> **Schema validation (worked example shipped).** `check-jsonschema` is wired into `.pre-commit-config.yaml` to validate the template's worked-example schema (`schemas/example-config.schema.json`) and its valid example data under `schemas/examples/example-config/valid/`, plus a `check-metaschema` self-validation hook for the schema itself. See [`schemas/README.md`](schemas/README.md) for the worked example, the canonical downstream removal checklist, and future-work candidates. Downstream repositories MAY add additional `check-jsonschema` hook entries for their own schema-backed file families.
-
-```bash
-# Run all pre-commit hooks (includes data-file validators)
-pre-commit run --all-files
-
-# Run a specific hook
-pre-commit run check-json --all-files
-pre-commit run check-yaml --all-files
-pre-commit run yamllint --all-files
-pre-commit run actionlint --all-files
-pre-commit run check-jsonschema --all-files
-pre-commit run check-metaschema --all-files
-```
-
-#### Terraform Linting
-
-This repository includes Terraform linting via:
-
-- **terraform fmt:** Format checking and auto-formatting
-- **terraform validate:** Configuration validation
-- **TFLint:** Best practice linting with cloud provider plugins
-
-Configuration: `.tflint.hcl`
-
-```bash
-# Format check
-terraform fmt -check -recursive
-
-# Format fix
-terraform fmt -recursive
-
-# Validate (requires init)
-terraform init -backend=false && terraform validate
-
-# Lint
-tflint --init && tflint --recursive
-```
-
-### Testing
-
-#### Python Tests
-
-Python tests use pytest with coverage reporting.
-
-```bash
-# Run all Python tests
-pytest tests/ -v --cov --cov-report=term-missing
-
-# Run a specific test file
-pytest tests/test_example.py -v
-
-# Run the schema-example contract test (validates schemas/examples/<schema>/{valid,invalid}/ fixtures)
-pytest tests/test_schema_examples.py -v
-```
-
-The schema-example contract test ([`tests/test_schema_examples.py`](tests/test_schema_examples.py)) auto-discovers `schemas/*.schema.json` and the matching `schemas/examples/<name>/{valid,invalid}/` fixtures and asserts that valid fixtures pass and invalid fixtures fail. A starter version is also available at [`templates/python/tests/test_schema_examples.py`](templates/python/tests/test_schema_examples.py) for downstream adoption.
-
-> **Prerequisite — `check-jsonschema` must be on PATH.** This test shells out to the `check-jsonschema` CLI and uses `@pytest.mark.skipif(shutil.which("check-jsonschema") is None, ...)` to skip every parametrized case when the binary is not available. **A skipped test is not a passing test:** if `check-jsonschema` is missing, pytest still exits `0`, but no schema validation actually ran. Install it via `pip install -e ".[dev]"` (which pulls in `check-jsonschema` along with the other dev dependencies — see the `[project.optional-dependencies] dev` table in [`pyproject.toml`](pyproject.toml)) or `pip install check-jsonschema` if you only need this one tool; either path puts the binary on PATH so `shutil.which` finds it. **`pre-commit install --install-hooks` does NOT** add `check-jsonschema` to PATH — pre-commit installs hook dependencies into its own isolated per-hook environments under `~/.cache/pre-commit/`, which satisfies the pre-commit hook but not the `shutil.which` lookup this pytest test performs. To validate schemas through the pre-commit toolchain instead of through this pytest test, run `pre-commit run check-jsonschema --all-files`. Confirm the test reports collected cases (e.g., `N passed`) rather than `N skipped` to know it actually ran.
-
-#### PowerShell Tests
-
-PowerShell tests use Pester 5.x.
-
-```powershell
-# Install Pester if needed
-Install-Module -Name Pester -MinimumVersion 5.0 -Force -Scope CurrentUser
-
-# Run all Pester tests
 Invoke-Pester -Path tests/ -Output Detailed
-
-# Run a specific test file
-Invoke-Pester -Path tests/PowerShell/Placeholder.Tests.ps1
+pwsh -File src/tools/Invoke-SchemaLint.ps1
 ```
 
-CI runs PowerShell tests on Windows, macOS, and Linux to ensure cross-platform compatibility.
+The repository keeps markdown, JSON, YAML, GitHub Actions, and PowerShell validation. Removed language-template support is intentionally not part of this starter kit.
 
-See `templates/powershell/Example.Tests.ps1` for a comprehensive Pester test template.
+## Releases
 
-#### Terraform Tests
+The chosen release posture is source plus a release bundle ZIP plus `bundle.manifest.json` plus a SHA-256 checksum file. Release publishing automation is not enabled yet because packaging intentionally fails closed until the pinned runtime is present.
 
-Terraform tests use the native Terraform test framework (Terraform 1.6+).
+Run the readiness gate after runtime placement and lab evidence collection:
 
-```bash
-# Run all Terraform tests
-terraform test -verbose
-
-# Run specific test file
-terraform test -filter=tests/unit.tftest.hcl
+```powershell
+pwsh -File tools/Test-ReleaseReadiness.ps1
 ```
 
-Tests are located in `modules/*/tests/` directories.
+Expected preview result: non-zero exit with a report of missing runtime, dry release, rehearsal, lab, public-flip, deck, and final DSC recheck evidence.
 
-See `templates/terraform/Example.tftest.hcl` for a comprehensive Terraform test template.
+## Getting Started
 
-### Code Quality
+1. Install Node.js 20 or newer.
+2. Run `npm install`.
+3. Install `pre-commit` with your normal global or isolated tooling.
+4. Run `pre-commit run --all-files`.
+5. Review [docs/contract.md](docs/contract.md), [docs/packaging.md](docs/packaging.md), and [docs/runbooks/demo-runbook.md](docs/runbooks/demo-runbook.md).
 
-This repository enforces code quality through:
+## Support
 
-- **Markdown Linting:** Runs on pre-commit and in CI
-- **JSON/YAML Validation:** `check-json` (strict `.json`), `check-yaml`, and `yamllint` run on pre-commit
-- **GitHub Actions Linting:** `actionlint` runs on pre-commit
-- **JSON Schemas:** Root-level `schemas/` convention for schema-backed JSON/YAML files
-- **GitHub Copilot Instructions:** Guides AI-assisted development
-- **Pre-commit Hooks:** Catches issues before they reach CI
-- **PSScriptAnalyzer:** PowerShell static analysis with OTBS formatting
-- **TFLint:** Terraform linting with configurable rules and cloud provider plugins
+Use GitHub issues for bugs, feature requests, and documentation problems. Do not paste secrets, tenant identifiers, customer data, private logs, unredacted transcripts, or full evidence bundles into issues.
 
-### License
+## Security
 
-MIT License - See [LICENSE](LICENSE) for details.
+Read [SECURITY.md](SECURITY.md) before reporting vulnerabilities or sharing evidence. Security reports must not be filed as public issues.
+
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md). Runner behavior changes require tests, and schema changes must update schemas, examples, tests, and docs together.
+
+## License
+
+MIT License. Copyright (c) 2026 Frank Lesniak and Blake Cherry.

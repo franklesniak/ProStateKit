@@ -1,0 +1,111 @@
+name: Build Bundle
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "configs/**"
+      - "runtime/**"
+      - "resources/**"
+      - "src/**"
+      - "tools/**"
+      - "bundle.manifest.template.json"
+      - ".github/workflows/build-bundle.yml"
+  pull_request:
+    branches: ["**"]
+    paths:
+      - "configs/**"
+      - "runtime/**"
+      - "resources/**"
+      - "src/**"
+      - "tools/**"
+      - "bundle.manifest.template.json"
+      - ".github/workflows/build-bundle.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    name: Bundle guard
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install Node dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Verify bundle behavior
+        shell: pwsh
+        run: |
+          $runtimePath = Join-Path -Path (Get-Location) -ChildPath "runtime/dsc/dsc.exe"
+          $outputPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "prostatekit-bundle"
+          $bundleRoot = Join-Path -Path $outputPath -ChildPath "ProStateKit-0.1.0"
+          $bundleSucceeded = $false
+          $bundleError = $null
+
+          if (Test-Path -LiteralPath $runtimePath -PathType Leaf) {
+            try {
+              & ./tools/Build-Bundle.ps1 -OutputPath $outputPath
+              $bundleSucceeded = $LASTEXITCODE -eq 0
+            } catch {
+              $bundleError = $_.Exception.Message
+            }
+
+            if (-not $bundleSucceeded) {
+              Write-Error $bundleError
+              throw "Build-Bundle.ps1 failed even though a pinned runtime exists."
+            }
+
+            $artifacts = @(Get-ChildItem -LiteralPath $outputPath -Filter "*.zip" -File)
+            if ($artifacts.Count -eq 0) {
+              throw "Build-Bundle.ps1 did not produce a ZIP artifact."
+            }
+
+            $manifestPath = Join-Path -Path $outputPath -ChildPath "bundle.manifest.json"
+            if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+              throw "Build-Bundle.ps1 did not produce bundle.manifest.json."
+            }
+
+            $checksums = @(Get-ChildItem -LiteralPath $outputPath -Filter "*.sha256" -File)
+            if ($checksums.Count -eq 0) {
+              throw "Build-Bundle.ps1 did not produce a SHA-256 checksum artifact."
+            }
+
+            & ./tools/Test-Bundle.ps1 -BundleRoot $bundleRoot
+            if ($LASTEXITCODE -ne 0) {
+              throw "Test-Bundle.ps1 failed for the built bundle."
+            }
+          } else {
+            try {
+              & ./tools/Build-Bundle.ps1 -OutputPath $outputPath
+              $bundleSucceeded = $LASTEXITCODE -eq 0
+            } catch {
+              $bundleError = $_.Exception.Message
+              Write-Host "Expected bundle failure without runtime: $bundleError"
+            }
+
+            if ($bundleSucceeded) {
+              throw "Build-Bundle.ps1 succeeded without a pinned runtime."
+            }
+
+            $forbiddenArtifacts = @(
+              Get-ChildItem -LiteralPath $outputPath -Recurse -File -ErrorAction SilentlyContinue |
+                Where-Object -FilterScript {
+                  $_.Extension -in @(".zip", ".sha256") -or $_.Name -eq "bundle.manifest.json"
+                }
+            )
+            if ($forbiddenArtifacts.Count -gt 0) {
+              throw "Build-Bundle.ps1 emitted artifacts without a pinned runtime."
+            }
+          }

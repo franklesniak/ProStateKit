@@ -1,0 +1,35 @@
+{
+  "directives": {
+    "description": "ProStateKit Windows endpoint baseline (sample)",
+    "version": "0.1.0",
+    "requireVersion": "TBD"
+  },
+  "resources": [
+    {
+      "name": "Controlled local group exists",
+      "type": "Microsoft.Windows/Group",
+      "properties": {
+        "groupName": "Baseline-ControlledLocal",
+        "members": []
+      }
+    },
+    {
+      "name": "LLMNR disabled",
+      "type": "Microsoft.Windows/Registry",
+      "properties": {
+        "keyPath": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\DNSClient",
+        "valueName": "EnableMulticast",
+        "valueData": 0,
+        "valueType": "REG_DWORD"
+      }
+    },
+    {
+      "name": "Baseline-applied marker file",
+      "type": "Microsoft.Windows/File",
+      "properties": {
+        "path": "C:\\ProgramData\\ProStateKit\\Baseline\\baseline-applied.txt",
+        "ensure": "Present"
+      }
+    }
+  ]
+}

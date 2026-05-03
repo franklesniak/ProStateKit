@@ -1,0 +1,11 @@
+{
+  "sample": true,
+  "operation": "test",
+  "resources": [
+    {
+      "name": "LLMNR disabled",
+      "type": "Microsoft.Windows/Registry",
+      "inDesiredState": true
+    }
+  ]
+}

@@ -16,7 +16,7 @@
 # per-attribute in `.gitattributes`, so the binary overrides take
 # precedence over the directory-wide `text eol=lf` pins.
 #
-# DO NOT DELETE these rules when customizing this template unless you are
+# DO NOT DELETE these rules when customizing this repository unless you are
 # certain no byte-exact comparison exists in your repository. See
 # .github/instructions/gitattributes.instructions.md for the normative rule
 # and guidance on adding project-specific entries (including how to
