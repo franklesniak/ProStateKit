@@ -109,7 +109,8 @@ if ($manifest.runtime.expectedHash -ne 'TBD' -and $runtimeHash -ne $manifest.run
 }
 
 if ($manifest.dscVersion -ne 'TBD') {
-    $versionOutput = & $runtimePath --version 2>$null
+    $versionOutput = & $runtimePath --version 2>&1 |
+        Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] }
     if ($LASTEXITCODE -ne 0) {
         throw [System.InvalidOperationException]::new('Runtime version check failed.')
     }

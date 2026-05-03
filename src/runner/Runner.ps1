@@ -941,7 +941,8 @@ try {
         throw [System.InvalidOperationException]::new('InstalledPath runtime mode requires expected runtime hash and version for production planes.')
     }
 
-    $versionOutput = & $dscPath --version 2>$null
+    $versionOutput = & $dscPath --version 2>&1 |
+        Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] }
     if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($versionOutput)) {
         $dscVersion = ([string] $versionOutput).Trim()
         $runtimeInfo.version = $dscVersion

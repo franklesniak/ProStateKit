@@ -37,7 +37,8 @@ if (-not (Test-Path -LiteralPath $runtimePath -PathType Leaf)) {
 }
 
 $dscVersion = 'TBD'
-$versionOutput = & $runtimePath --version 2>$null
+$versionOutput = & $runtimePath --version 2>&1 |
+    Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] }
 if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($versionOutput)) {
     $dscVersion = ([string] $versionOutput).Trim()
 }
