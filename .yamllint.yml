@@ -2,9 +2,11 @@
 #
 # The `truthy.check-keys: false` setting is intentional so GitHub Actions
 # workflow files can use the idiomatic unquoted `on:` key without yamllint
-# flagging it as a truthy value. The line-length rule is a warning because
-# schema descriptions, issue-form text, and documentation links often exceed
-# 120 characters and are better reviewed in context.
+# flagging it as a truthy value. The `new-lines.type: platform` setting keeps
+# local Windows validation compatible with Git's CRLF working-tree conversion
+# while Linux CI continues to require LF. The line-length rule is a warning
+# because schema descriptions, issue-form text, and documentation links often
+# exceed 120 characters and are better reviewed in context.
 #
 # See https://yamllint.readthedocs.io/en/stable/configuration.html
 extends: default
@@ -34,6 +36,8 @@ rules:
     allow-non-breakable-inline-mappings: true
     level: warning
   new-line-at-end-of-file: enable
+  new-lines:
+    type: platform
   trailing-spaces: enable
   truthy:
     allowed-values:
