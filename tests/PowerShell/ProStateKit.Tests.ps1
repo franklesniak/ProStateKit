@@ -1,31 +1,18 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$script:fakeRuntimeBinaryPath = $null
-
 BeforeAll {
     $script:testRoot = Split-Path -Path $PSCommandPath -Parent
     $script:testsRoot = Split-Path -Path $script:testRoot -Parent
     $script:repoRoot = Split-Path -Path $script:testsRoot -Parent
-}
+    $script:fakeRuntimeBinaryPath = $null
 
-function Get-ProStateKitTestFakeRuntimeBinary {
-    if (-not [string]::IsNullOrWhiteSpace($script:fakeRuntimeBinaryPath) -and (Test-Path -LiteralPath $script:fakeRuntimeBinaryPath -PathType Leaf)) {
-        return $script:fakeRuntimeBinaryPath
-    }
+    function Get-ProStateKitTestFakeRuntimeBinary {
+        if (-not [string]::IsNullOrWhiteSpace($script:fakeRuntimeBinaryPath) -and (Test-Path -LiteralPath $script:fakeRuntimeBinaryPath -PathType Leaf)) {
+            return $script:fakeRuntimeBinaryPath
+        }
 
-    $cacheRoot = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ('prostatekit-fake-runtime-{0}' -f $PID)
-    Remove-Item -LiteralPath $cacheRoot -Recurse -Force -ErrorAction SilentlyContinue
-    [void] (New-Item -Path $cacheRoot -ItemType Directory -Force)
-
-    $sourcePath = Join-Path -Path $cacheRoot -ChildPath 'Program.cs'
-    $exeName = 'dsc'
-    if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
-        $exeName = 'dsc.exe'
-    }
-    $exePath = Join-Path -Path $cacheRoot -ChildPath $exeName
-
-    Set-Content -LiteralPath $sourcePath -Encoding utf8 -Value @'
+        $csharpSource = @'
 using System;
 using System.IO;
 
@@ -60,27 +47,58 @@ class Program
 }
 '@
 
-    if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
-        $cscCandidates = @(
-            (Join-Path -Path $env:WINDIR -ChildPath 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'),
-            (Join-Path -Path $env:WINDIR -ChildPath 'Microsoft.NET\Framework\v4.0.30319\csc.exe')
-        )
-        $csc = $cscCandidates | Where-Object -FilterScript { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
-        if ($null -eq $csc) {
-            throw [System.IO.FileNotFoundException]::new(
-                ('No csc.exe found at expected .NET Framework paths: {0}' -f ($cscCandidates -join ', ')))
+        $hasher = [System.Security.Cryptography.SHA256]::Create()
+        try {
+            $sourceHashBytes = $hasher.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($csharpSource))
+        } finally {
+            $hasher.Dispose()
+        }
+        $sourceHash = (([System.BitConverter]::ToString($sourceHashBytes)) -replace '-', '').Substring(0, 16).ToLowerInvariant()
+
+        $cacheRoot = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ('prostatekit-fake-runtime-{0}' -f $sourceHash)
+        $exeName = 'dsc'
+        if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
+            $exeName = 'dsc.exe'
+        }
+        $exePath = Join-Path -Path $cacheRoot -ChildPath $exeName
+
+        if (Test-Path -LiteralPath $exePath -PathType Leaf) {
+            $cachedSanityOutput = & $exePath --version 2>&1
+            $cachedSanityExit = $LASTEXITCODE
+            $cachedSanityText = (($cachedSanityOutput | ForEach-Object -Process { [string] $_ }) -join "`n").Trim()
+            if ($cachedSanityExit -eq 0 -and $cachedSanityText -eq '3.2.0-test') {
+                $script:fakeRuntimeBinaryPath = $exePath
+                return $exePath
+            }
+            Remove-Item -LiteralPath $cacheRoot -Recurse -Force -ErrorAction SilentlyContinue
         }
 
-        $cscOutput = & $csc /nologo /target:exe /optimize /out:$exePath $sourcePath 2>&1
-        $cscExit = $LASTEXITCODE
-        $cscOutputText = ($cscOutput | ForEach-Object -Process { [string] $_ }) -join "`n"
-        if ($cscExit -ne 0) {
-            throw [System.InvalidOperationException]::new(
-                ('csc.exe failed to compile fake DSC runtime (exit {0}): {1}' -f $cscExit, $cscOutputText))
-        }
-    } else {
-        # POSIX path uses a shell script directly; nothing to compile.
-        Set-Content -LiteralPath $exePath -Encoding utf8 -Value @'
+        [void] (New-Item -Path $cacheRoot -ItemType Directory -Force)
+
+        $sourcePath = Join-Path -Path $cacheRoot -ChildPath 'Program.cs'
+        Set-Content -LiteralPath $sourcePath -Encoding utf8 -Value $csharpSource
+
+        if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
+            $cscCandidates = @(
+                (Join-Path -Path $env:WINDIR -ChildPath 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'),
+                (Join-Path -Path $env:WINDIR -ChildPath 'Microsoft.NET\Framework\v4.0.30319\csc.exe')
+            )
+            $csc = $cscCandidates | Where-Object -FilterScript { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+            if ($null -eq $csc) {
+                throw [System.IO.FileNotFoundException]::new(
+                    ('No csc.exe found at expected .NET Framework paths: {0}' -f ($cscCandidates -join ', ')))
+            }
+
+            $cscOutput = & $csc /nologo /target:exe /optimize /out:$exePath $sourcePath 2>&1
+            $cscExit = $LASTEXITCODE
+            $cscOutputText = ($cscOutput | ForEach-Object -Process { [string] $_ }) -join "`n"
+            if ($cscExit -ne 0) {
+                throw [System.InvalidOperationException]::new(
+                    ('csc.exe failed to compile fake DSC runtime (exit {0}): {1}' -f $cscExit, $cscOutputText))
+            }
+        } else {
+            # POSIX path uses a shell script directly; nothing to compile.
+            Set-Content -LiteralPath $exePath -Encoding utf8 -Value @'
 #!/bin/sh
 if [ "$1" = "--version" ]; then
   echo "3.2.0-test"
@@ -88,40 +106,41 @@ if [ "$1" = "--version" ]; then
 fi
 exit 0
 '@
-        & chmod +x $exePath
+            & chmod +x $exePath
+        }
+
+        if (-not (Test-Path -LiteralPath $exePath -PathType Leaf)) {
+            throw [System.IO.FileNotFoundException]::new(
+                ('Fake DSC runtime binary was not produced at {0}.' -f $exePath), $exePath)
+        }
+
+        $sanityOutput = & $exePath --version 2>&1
+        $sanityExit = $LASTEXITCODE
+        $sanityOutputText = (($sanityOutput | ForEach-Object -Process { [string] $_ }) -join "`n").Trim()
+        if ($sanityExit -ne 0 -or $sanityOutputText -ne '3.2.0-test') {
+            throw [System.InvalidOperationException]::new(
+                ('Fake DSC runtime sanity check failed (exit {0}): expected "3.2.0-test", got "{1}"' -f $sanityExit, $sanityOutputText))
+        }
+
+        $script:fakeRuntimeBinaryPath = $exePath
+        return $script:fakeRuntimeBinaryPath
     }
 
-    if (-not (Test-Path -LiteralPath $exePath -PathType Leaf)) {
-        throw [System.IO.FileNotFoundException]::new(
-            ('Fake DSC runtime binary was not produced at {0}.' -f $exePath), $exePath)
-    }
+    function Copy-ProStateKitTestFakeRuntime {
+        param(
+            [Parameter(Mandatory)]
+            [string] $DestinationPath
+        )
 
-    $sanityOutput = & $exePath --version 2>&1
-    $sanityExit = $LASTEXITCODE
-    $sanityOutputText = (($sanityOutput | ForEach-Object -Process { [string] $_ }) -join "`n").Trim()
-    if ($sanityExit -ne 0 -or $sanityOutputText -ne '3.2.0-test') {
-        throw [System.InvalidOperationException]::new(
-            ('Fake DSC runtime sanity check failed (exit {0}): expected "3.2.0-test", got "{1}"' -f $sanityExit, $sanityOutputText))
-    }
-
-    $script:fakeRuntimeBinaryPath = $exePath
-    return $script:fakeRuntimeBinaryPath
-}
-
-function Copy-ProStateKitTestFakeRuntime {
-    param(
-        [Parameter(Mandatory)]
-        [string] $DestinationPath
-    )
-
-    $sourceBinary = Get-ProStateKitTestFakeRuntimeBinary
-    $destinationDir = Split-Path -Path $DestinationPath -Parent
-    if (-not [string]::IsNullOrWhiteSpace($destinationDir)) {
-        [void] (New-Item -Path $destinationDir -ItemType Directory -Force)
-    }
-    Copy-Item -LiteralPath $sourceBinary -Destination $DestinationPath -Force
-    if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
-        & chmod +x $DestinationPath
+        $sourceBinary = Get-ProStateKitTestFakeRuntimeBinary
+        $destinationDir = Split-Path -Path $DestinationPath -Parent
+        if (-not [string]::IsNullOrWhiteSpace($destinationDir)) {
+            [void] (New-Item -Path $destinationDir -ItemType Directory -Force)
+        }
+        Copy-Item -LiteralPath $sourceBinary -Destination $DestinationPath -Force
+        if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
+            & chmod +x $DestinationPath
+        }
     }
 }
 
