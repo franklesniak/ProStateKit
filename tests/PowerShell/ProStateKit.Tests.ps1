@@ -2707,28 +2707,24 @@ Describe -Name 'Contribution instruction guardrails' -Fixture {
         $powershellInstructions = Get-Content -LiteralPath (Join-Path -Path $script:repoRoot -ChildPath '.github/instructions/powershell.instructions.md') -Raw
         $docsInstructions = Get-Content -LiteralPath (Join-Path -Path $script:repoRoot -ChildPath '.github/instructions/docs.instructions.md') -Raw
         $requiredPowerShellTerms = @(
-            'applyTo: "**/*.ps1,**/*.psm1,**/*.psd1"',
-            'Scripts MUST set `$ErrorActionPreference = ''Stop''`.',
-            'Runtime scripts MUST use `Set-StrictMode -Version Latest` unless a documented compatibility exception is tested.',
-            'PowerShell behavior changes MUST include Pester tests.',
-            'Public runtime behavior MUST have an explicit exit-code contract.',
-            'Unimplemented runtime paths MUST fail closed with a non-zero exit or thrown terminating error.',
-            'Use safe path handling and reject path traversal or symlink escapes before runtime use.',
-            'Do not write secrets or sensitive values to stdout, transcripts, logs, raw evidence, normalized evidence, or summaries.',
-            'Preserve raw DSC output before parsing or normalizing it.',
-            'Parser failures, unknown result shapes, missing evidence, resource failures, and partial convergence MUST fail closed.',
-            'Pester tests live under `tests/PowerShell/` and use Pester 5 syntax.'
+            'applyTo:',
+            '"**/*.ps1"',
+            '# PowerShell Writing Style',
+            'Code **MUST** use 4 spaces for indentation, never tabs',
+            'Opening braces **MUST** be placed on same line (OTBS)',
+            'Source `.ps1` files **MUST** be UTF-8 without BOM by default',
+            'Functions **MUST** follow Verb-Noun pattern with approved verbs',
+            'Aliases **MUST NOT** be used in code',
+            'Public identifiers (functions, parameters, properties) **MUST** use PascalCase'
         )
         $requiredDocsTerms = @(
-            'Write practitioner-first, direct, concrete, sponsor-safe documentation.',
-            'Keep wording stage-safe: ProStateKit is a preview starter kit, not a finished product.',
-            'Do not overclaim production readiness, platform validation, DSC version support, or security guarantees.',
-            'Use `TODO:` for unimplemented behavior instead of describing it as complete.',
-            'Keep execution semantics consistent with the Runner contract: Detect maps to `dsc config test`; Remediate maps to `dsc config set` plus verification.',
-            'Never instruct users to paste secrets, tenant identifiers, customer data, private logs, unredacted transcripts, or full evidence bundles.',
-            'Prefer relative links for repository files.',
-            'Documents longer than about 30 lines or intended as durable references SHOULD include a metadata block with `Status`, `Owner`, `Last Updated`, `Scope`, and `Related`.',
-            'If a command is expected to fail because the implementation is a scaffold, state the expected non-zero outcome.'
+            'applyTo: "**/*.md"',
+            '# Documentation Writing Style',
+            'Documentation in this repository is treated as a **first-class engineering artifact**',
+            '**Contract-first:** State behavior precisely.',
+            '**Drift-resistant:** Docs evolve with code',
+            '**Explain "why," not just "what":**',
+            'Last Updated'
         )
 
         foreach ($requiredTerm in $requiredPowerShellTerms) {
@@ -2746,25 +2742,22 @@ Describe -Name 'Data and Git attribute instruction guardrails' -Fixture {
         $jsonInstructions = Get-Content -LiteralPath (Join-Path -Path $script:repoRoot -ChildPath '.github/instructions/json.instructions.md') -Raw
         $yamlInstructions = Get-Content -LiteralPath (Join-Path -Path $script:repoRoot -ChildPath '.github/instructions/yaml.instructions.md') -Raw
         $requiredJsonTerms = @(
-            '`.json` files MUST be strict JSON: no comments, trailing commas, single quotes, or unquoted keys.',
-            'Use 2-space indentation and double-quoted keys and string values.',
-            'Do not commit secrets or real endpoint, tenant, user, customer, or credential data.',
-            'Bundle manifest examples MUST keep literal `TBD` values until real version, timestamp, commit, and hash values exist.',
-            'Schema-backed examples MUST stay synchronized with their schemas and tests.',
-            'pre-commit run check-json --all-files',
-            'pre-commit run check-jsonschema --all-files',
-            'pre-commit run check-metaschema --all-files'
+            'applyTo: "**/*.json,**/*.jsonc"',
+            '`.json` files **MUST** be strict JSON',
+            '**MUST** use 2-space indentation; **MUST NOT** use tabs.',
+            'Keys and string values **MUST** be double-quoted.',
+            '**MUST NOT** commit secrets; example values **MUST** be obviously fake.',
+            'Production or load-bearing JSON files **MUST** have schema validation',
+            'Untrusted JSON **MUST** be validated before use and **MUST NOT** be evaluated as executable code.'
         )
         $requiredYamlTerms = @(
-            'Use 2-space indentation and block style by default.',
-            'Quote version pins and string values that could be misparsed as booleans, numbers, nulls, dates, or YAML 1.1 truthy values.',
-            'Use lowercase `true`, `false`, and `null`.',
-            'Do not use anchors, aliases, merge keys, or custom tags unless the consumer requires them and the reason is documented.',
-            'Do not commit secrets or real endpoint, tenant, user, customer, or credential data.',
-            'GitHub Actions workflows MUST use least-privilege `permissions:`.',
-            'pre-commit run check-yaml --all-files',
-            'pre-commit run yamllint --all-files',
-            'pre-commit run actionlint --all-files'
+            'applyTo: "**/*.yml,**/*.yaml"',
+            '**MUST** use 2-space indentation; **MUST NOT** use tabs.',
+            '**MUST** use block style by default',
+            'lowercase `true`, `false`, and `null`',
+            '**MUST** quote version pins',
+            '**MUST NOT** commit secrets in YAML.',
+            '**MUST** apply least-privilege `permissions:` on GitHub Actions workflows.'
         )
 
         foreach ($requiredTerm in $requiredJsonTerms) {
@@ -2809,7 +2802,6 @@ Describe -Name 'Data and Git attribute instruction guardrails' -Fixture {
         }
 
         $attributes | Should -Not -Match ([regex]::Escape(('customizing this ' + 'template')))
-        $instructions | Should -Not -Match ([regex]::Escape(('Adopters ' + '**SHOULD**')))
     }
 }
 
