@@ -5,7 +5,7 @@
 
 - **Status:** Draft
 - **Owner:** Repository Maintainers
-- **Last Updated:** 2026-05-03
+- **Last Updated:** 2026-05-04
 - **Scope:** Documents raw DSC evidence preservation and the normalized `wrapper.result.json` schema.
 - **Related:** [Wrapper Result Schema](../schemas/wrapper-result.schema.json), [Contract](contract.md), [Troubleshooting](troubleshooting.md)
 
@@ -44,7 +44,7 @@ The schema is additive. Consumers SHOULD read wrapper-owned normalized fields an
 
 ## Resource Normalization
 
-Success requires per-resource success. The preview parser accepts resource collections from top-level `resources`, `results`, `result`, or `actualState`; if those are absent, it accepts a single root object only when that object has resource identity fields. Resource name resolves from `name`, `resourceName`, then `instanceName`. Resource type resolves from `type`, `resourceType`, then `fullyQualifiedTypeName`. Success resolves from `succeeded`, `success`, `inDesiredState`, then `compliant`; a textual `result` value of `Success`, `Succeeded`, `Compliant`, or `InDesiredState` is also treated as success, while `Fail`, `Error`, `NonCompliant`, or `NotInDesiredState` is treated as failure. Change state resolves from `changed`, `wasChanged`, then `rebootRequired`, and Detect mode forces `changed` to `false`.
+Success requires per-resource success. The preview parser accepts resource collections from top-level `resources`, `results`, `result`, or `actualState`; if those are absent, it accepts a single root object only when that object has resource identity fields. Resource name resolves from `name`, `resourceName`, then `instanceName`. Resource type resolves from `type`, `resourceType`, then `fullyQualifiedTypeName`. Success resolves from `succeeded`, `success`, `inDesiredState`, then `compliant` on the resource object, or from the same fields under a nested DSC `result` object. A textual `result` value of `Success`, `Succeeded`, `Compliant`, or `InDesiredState` is also treated as success, while `Fail`, `Error`, `NonCompliant`, or `NotInDesiredState` is treated as failure. Change state resolves from `changed`, `wasChanged`, then `rebootRequired` on the resource object or nested DSC `result`, and Detect mode forces `changed` to `false`.
 
 ## Fail-Closed Strategy
 

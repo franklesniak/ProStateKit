@@ -839,7 +839,11 @@ if "%1"=="--version" (
   echo 3.2.0-test
   exit /b 0
 )
-echo {"resources":[{"name":"Fake resource","type":"ProStateKit/Fake","succeeded":true,"changed":false,"error":null,"rebootRequired":false}]}
+if "%2"=="set" (
+  echo {"result":[{"name":"Fake resource","type":"ProStateKit/Fake","result":"Succeeded","changed":true,"message":null,"rebootRequired":false}]}
+  exit /b 0
+)
+echo {"executionInformation":{"operation":"test"},"results":[{"name":"Fake resource","type":"ProStateKit/Fake","result":{"inDesiredState":true,"differingProperties":[]}}],"hadErrors":false}
 exit /b 0
 '@
             } else {
@@ -849,7 +853,11 @@ if [ "$1" = "--version" ]; then
   echo "3.2.0-test"
   exit 0
 fi
-printf '%s\n' '{"resources":[{"name":"Fake resource","type":"ProStateKit/Fake","succeeded":true,"changed":false,"error":null,"rebootRequired":false}]}'
+if [ "$2" = "set" ]; then
+  printf '%s\n' '{"result":[{"name":"Fake resource","type":"ProStateKit/Fake","result":"Succeeded","changed":true,"message":null,"rebootRequired":false}]}'
+  exit 0
+fi
+printf '%s\n' '{"executionInformation":{"operation":"test"},"results":[{"name":"Fake resource","type":"ProStateKit/Fake","result":{"inDesiredState":true,"differingProperties":[]}}],"hadErrors":false}'
 exit 0
 '@
                 & chmod +x $runtimePath
@@ -888,6 +896,11 @@ exit 0
             $remediateRunRoot = Join-Path -Path $logRoot -ChildPath (Join-Path -Path 'Runs' -ChildPath "$runId-remediate")
             Test-Path -LiteralPath (Join-Path -Path $remediateRunRoot -ChildPath 'dsc.set.stdout.raw.json') -PathType Leaf | Should -BeTrue
             Test-Path -LiteralPath (Join-Path -Path $remediateRunRoot -ChildPath 'dsc.test.stdout.raw.json') -PathType Leaf | Should -BeTrue
+            $setRaw = Get-Content -LiteralPath (Join-Path -Path $remediateRunRoot -ChildPath 'dsc.set.stdout.raw.json') -Raw | ConvertFrom-Json
+            $testRaw = Get-Content -LiteralPath (Join-Path -Path $remediateRunRoot -ChildPath 'dsc.test.stdout.raw.json') -Raw | ConvertFrom-Json
+            @($setRaw.result).Count | Should -Be 1
+            @($setRaw.result)[0].result | Should -Be 'Succeeded'
+            $testRaw.executionInformation.operation | Should -Be 'test'
         } finally {
             Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
         }
@@ -1113,6 +1126,7 @@ Describe -Name 'DSC output fixtures' -Fixture {
                 'config-test.noncompliant.json',
                 'config-set.success.json',
                 'config-test.results-wrapper.json',
+                'config-test.nested-result.json',
                 'config-set.result-wrapper.json',
                 'config-test.actual-state.json',
                 'config-test.single-resource.json'
@@ -1131,6 +1145,20 @@ Describe -Name 'DSC output fixtures' -Fixture {
             @($resources)[0].changed | Should -BeOfType ([bool])
             @($resources)[0].rebootRequired | Should -BeOfType ([bool])
         }
+    }
+
+    It -Name 'Parses DSC 3.2 nested result.inDesiredState as compliant proof' -Test {
+        Import-Module -Name (Join-Path -Path $script:repoRoot -ChildPath 'src/ProStateKit.Dsc.psm1') -Force
+
+        $fixturePath = Join-Path -Path $script:repoRoot -ChildPath 'tests/fixtures/dsc-3.2.0/config-test.nested-result.json'
+        $resources = ConvertFrom-ProStateKitDscJson -Json (Get-Content -LiteralPath $fixturePath -Raw) -Mode Remediate
+
+        @($resources).Count | Should -Be 1
+        @($resources)[0].name | Should -Be 'LLMNR disabled'
+        @($resources)[0].type | Should -Be 'Microsoft.Windows/Registry'
+        @($resources)[0].succeeded | Should -BeTrue
+        @($resources)[0].changed | Should -BeFalse
+        @($resources)[0].rebootRequired | Should -BeFalse
     }
 
     It -Name 'Fails closed when DSC output has no resource proof' -Test {

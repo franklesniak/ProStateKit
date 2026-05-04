@@ -1,0 +1,56 @@
+{
+  "executionInformation": {
+    "duration": "PT2.0488614S",
+    "endDatetime": "2026-05-04T02:59:29.269637300-05:00",
+    "executionType": "actual",
+    "operation": "test",
+    "securityContext": "elevated",
+    "startDatetime": "2026-05-04T02:59:27.220775900-05:00",
+    "version": "3.2.0"
+  },
+  "metadata": {
+    "Microsoft.DSC": {
+      "duration": "PT2.0488571S",
+      "endDatetime": "2026-05-04T02:59:29.269633-05:00",
+      "executionType": "actual",
+      "operation": "test",
+      "securityContext": "elevated",
+      "startDatetime": "2026-05-04T02:59:27.220775900-05:00",
+      "version": "3.2.0"
+    }
+  },
+  "results": [
+    {
+      "executionInformation": {
+        "duration": "PT0.0254518S"
+      },
+      "metadata": {
+        "Microsoft.DSC": {
+          "duration": "PT0.0254518S"
+        }
+      },
+      "name": "LLMNR disabled",
+      "type": "Microsoft.Windows/Registry",
+      "result": {
+        "desiredState": {
+          "keyPath": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\DNSClient",
+          "valueName": "EnableMulticast",
+          "valueData": {
+            "DWord": 0
+          }
+        },
+        "actualState": {
+          "keyPath": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\DNSClient",
+          "valueName": "EnableMulticast",
+          "valueData": {
+            "DWord": 0
+          }
+        },
+        "inDesiredState": true,
+        "differingProperties": []
+      }
+    }
+  ],
+  "messages": [],
+  "hadErrors": false
+}

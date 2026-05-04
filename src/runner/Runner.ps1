@@ -778,11 +778,31 @@ function ConvertFrom-ProStateKitDscOutput {
             $properties['resourceType']
             $properties['fullyQualifiedTypeName']
         ) | Where-Object -FilterScript { $null -ne $_ } | Select-Object -First 1
-        $errorProperty = @(
+        $resultProperty = $properties['result']
+        $resultValue = $null
+        $nestedResultProperties = $null
+        if ($null -ne $resultProperty) {
+            $resultValue = $resultProperty.Value
+            if ($null -ne $resultValue -and
+                $resultValue -isnot [string] -and
+                $resultValue -isnot [ValueType]) {
+                $nestedResultProperties = $resultValue.PSObject.Properties
+            }
+        }
+
+        $errorPropertyCandidates = @(
             $properties['error']
             $properties['errorMessage']
             $properties['message']
-        ) | Where-Object -FilterScript { $null -ne $_ } | Select-Object -First 1
+        )
+        if ($null -ne $nestedResultProperties) {
+            $errorPropertyCandidates += @(
+                $nestedResultProperties['error']
+                $nestedResultProperties['errorMessage']
+                $nestedResultProperties['message']
+            )
+        }
+        $errorProperty = $errorPropertyCandidates | Where-Object -FilterScript { $null -ne $_ } | Select-Object -First 1
         $name = $null
         $type = $null
         $errorValue = $null
@@ -804,15 +824,27 @@ function ConvertFrom-ProStateKitDscOutput {
         }
 
         $succeeded = $false
+        $succeededWasResolved = $false
         foreach ($propertyName in @('succeeded', 'success', 'inDesiredState', 'compliant')) {
             if ($null -ne $properties[$propertyName]) {
                 $succeeded = [bool] $properties[$propertyName].Value
+                $succeededWasResolved = $true
                 break
             }
         }
 
-        if ($null -ne $properties['result']) {
-            $resultText = [string] $properties['result'].Value
+        if (-not $succeededWasResolved -and $null -ne $nestedResultProperties) {
+            foreach ($propertyName in @('succeeded', 'success', 'inDesiredState', 'compliant')) {
+                if ($null -ne $nestedResultProperties[$propertyName]) {
+                    $succeeded = [bool] $nestedResultProperties[$propertyName].Value
+                    $succeededWasResolved = $true
+                    break
+                }
+            }
+        }
+
+        if ($null -ne $resultProperty -and $resultValue -is [string]) {
+            $resultText = [string] $resultValue
             if ($resultText -match '^(Success|Succeeded|Compliant|InDesiredState)$') {
                 $succeeded = $true
             } elseif ($resultText -match '(Fail|Error|NonCompliant|NotInDesiredState)') {
@@ -821,10 +853,20 @@ function ConvertFrom-ProStateKitDscOutput {
         }
 
         $changed = $false
+        $changedWasResolved = $false
         foreach ($propertyName in @('changed', 'wasChanged', 'rebootRequired')) {
             if ($null -ne $properties[$propertyName]) {
                 $changed = [bool] $properties[$propertyName].Value
+                $changedWasResolved = $true
                 break
+            }
+        }
+        if (-not $changedWasResolved -and $null -ne $nestedResultProperties) {
+            foreach ($propertyName in @('changed', 'wasChanged', 'rebootRequired')) {
+                if ($null -ne $nestedResultProperties[$propertyName]) {
+                    $changed = [bool] $nestedResultProperties[$propertyName].Value
+                    break
+                }
             }
         }
         if ($CurrentMode -eq 'Detect') {
@@ -834,6 +876,8 @@ function ConvertFrom-ProStateKitDscOutput {
         $rebootRequired = $false
         if ($null -ne $properties['rebootRequired']) {
             $rebootRequired = [bool] $properties['rebootRequired'].Value
+        } elseif ($null -ne $nestedResultProperties -and $null -ne $nestedResultProperties['rebootRequired']) {
+            $rebootRequired = [bool] $nestedResultProperties['rebootRequired'].Value
         }
 
         Get-ProStateKitResourceResult `
