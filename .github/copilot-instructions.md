@@ -69,8 +69,8 @@ In addition to formatting, linting, trailing-whitespace, and end-of-file fixes, 
 - `check-yaml` — parse-checks `.yml` / `.yaml` files.
 - `yamllint` — enforces YAML style per `.yamllint.yml`.
 - `actionlint` — lints GitHub Actions workflow files.
-- `check-jsonschema` — JSON Schema validation. Validates: (a) the worked-example schema's valid example data under `schemas/examples/example-config/valid/` against `schemas/example-config.schema.json`; (b) selected real load-bearing repository configuration files (for example, `.github/dependabot.yml`) against built-in vendor schemas shipped with `check-jsonschema`; and (c) any future project-owned schema-backed file families that downstream maintainers wire up in `.pre-commit-config.yaml`.
-- `check-metaschema` — self-validates project-owned schemas (currently `schemas/example-config.schema.json`) against their declared JSON Schema metaschema, where configured in `.pre-commit-config.yaml`.
+- `check-jsonschema` — JSON Schema validation. See `.pre-commit-config.yaml` for the authoritative list of active hooks (which schemas are validated and against which `--schemafile` or built-in vendor schema). Add additional file-family-scoped hooks as new schema-backed file families are introduced.
+- `check-metaschema` — self-validates project-owned schemas against their declared JSON Schema metaschema, where configured in `.pre-commit-config.yaml`.
 
 `.pre-commit-config.yaml` is the authoritative list of active hooks. Do **not** rely on a hardcoded total hook count when describing the validation model; consult `.pre-commit-config.yaml` directly to see which hooks are wired up.
 
