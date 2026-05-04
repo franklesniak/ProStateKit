@@ -3,15 +3,10 @@
   "operation": "set-then-test",
   "resources": [
     {
-      "name": "Windows PowerShell baseline resources",
-      "type": "Microsoft.Windows/WindowsPowerShell",
-      "setSucceeded": false,
-      "message": "Synthetic sample failure for controlled local group"
-    },
-    {
       "name": "LLMNR disabled",
       "type": "Microsoft.Windows/Registry",
-      "setSucceeded": true
+      "setSucceeded": false,
+      "message": "Synthetic sample failure for LLMNR registry value"
     }
   ]
 }

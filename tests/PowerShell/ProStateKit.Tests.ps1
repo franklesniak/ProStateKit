@@ -1851,27 +1851,21 @@ Describe -Name 'Configuration hygiene' -Fixture {
         }
     }
 
-    It -Name 'Baseline uses DSC 3.2 listed resource types at the top level' -Test {
+    It -Name 'Baseline uses direct DSC 3.2 command resources at the top level' -Test {
         $configPath = Join-Path -Path $script:repoRoot -ChildPath 'src/configs/baseline.windows.json'
         $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
         $resources = @($config.resources)
         $resourceTypes = @($resources | ForEach-Object -Process { $_.type })
 
         $resources | Should -Not -BeNullOrEmpty
-        $resourceTypes | Should -Contain 'Microsoft.Windows/WindowsPowerShell'
         $resourceTypes | Should -Contain 'Microsoft.Windows/Registry'
+        $resourceTypes | Should -Not -Contain 'Microsoft.Windows/WindowsPowerShell'
         $resourceTypes | Should -Not -Contain 'PSDesiredStateConfiguration/Group'
         $resourceTypes | Should -Not -Contain 'PSDesiredStateConfiguration/File'
 
-        $adapter = @($resources | Where-Object -FilterScript { $_.type -eq 'Microsoft.Windows/WindowsPowerShell' })[0]
         $registry = @($resources | Where-Object -FilterScript { $_.type -eq 'Microsoft.Windows/Registry' })[0]
 
-        $adapter.requireVersion | Should -Be '=0.1.0'
         $registry.requireVersion | Should -Be '=1.0.0'
-        @($adapter.properties.resources | ForEach-Object -Process { $_.type }) |
-            Should -Contain 'PSDesiredStateConfiguration/Group'
-        @($adapter.properties.resources | ForEach-Object -Process { $_.type }) |
-            Should -Contain 'PSDesiredStateConfiguration/File'
     }
 
     It -Name 'Sample evidence does not contain secret-shaped or environment-specific tokens' -Test {
@@ -3200,13 +3194,13 @@ Describe -Name 'Documentation and prompt guardrails' -Fixture {
             'Commands are preview-stage and fail closed until pinned DSC runtime integration is completed.',
             'Windows lab endpoint with permission to test DSC v3 resources.',
             'Pinned `dsc.exe` version for the checked-in config: `3.2.0`.',
-            'Resource paths exercised by the checked-in config:',
-            '`Microsoft.Windows/Registry` `=1.0.0` and `Microsoft.Windows/WindowsPowerShell` `=0.1.0`.',
-            'The Windows PowerShell adapter contains the nested `PSDesiredStateConfiguration/Group`',
+            'Resource path exercised by the checked-in config: `Microsoft.Windows/Registry` `=1.0.0`.',
+            'Deferred demo candidates: controlled local group and marker file.',
             '## DSC Configuration Under Test',
             '$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json',
             'directives.version: ''=3.2.0''',
             'DSC treats a missing `$schema` as a configuration validation failure.',
+            'The runnable baseline intentionally avoids the Windows PowerShell adapter',
             'pwsh -File .\tools\Build-Bundle.ps1',
             'Expected preview result without a pinned runtime: non-zero failure stating that the pinned DSC runtime is required, with no partial release artifact.',
             'Set-Location -LiteralPath ''C:\ProgramData\ProStateKit\Bundle''',
@@ -3221,7 +3215,8 @@ Describe -Name 'Documentation and prompt guardrails' -Fixture {
             'evidence/sample/partial-failure/wrapper.result.json',
             'evidence/sample/parse-failure/summary.txt',
             'pwsh -File .\src\tools\New-DemoDrift.ps1',
-            'Registry and local-group drift steps remain lab debt until reset behavior is rehearsed on the pinned runtime.',
+            'sets `HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient\EnableMulticast` to `1`.',
+            'Local-group and marker-file drift remain lab debt until adapter behavior is pinned and rehearsed.',
             'pwsh -File .\src\Invoke-ProStateKit.ps1 -Mode Remediate -Plane Local -ConfigPath .\configs\baseline.dsc.yaml -RuntimeMode PinnedBundle -BundleRoot .',
             'Expected lab result after runtime pinning: exit `0` only after post-set verification proves compliance.',
             'Use the same command as Known-Good Detect.',
@@ -3248,11 +3243,11 @@ Describe -Name 'Documentation and prompt guardrails' -Fixture {
         $resetPath = Join-Path -Path $script:repoRoot -ChildPath 'docs/runbooks/reset-lab.md'
         $resetRunbook = Get-Content -LiteralPath $resetPath -Raw
         $requiredTerms = @(
-            'Preview reset automation is implemented for the demo-owned marker file through [Reset-DemoDrift.ps1](../../src/tools/Reset-DemoDrift.ps1).',
-            'Local group and registry reset remain lab debt until the exact DSC resource versions are pinned and rehearsed on the Windows lab endpoint.',
-            'Remove or restore the controlled local group `Baseline-ControlledLocal`.',
-            'Restore the LLMNR demo registry value to the chosen pre-demo state.',
-            'Remove or restore `C:\ProgramData\ProStateKit\Baseline\baseline-applied.txt`.',
+            'Preview reset automation restores the LLMNR demo registry value through [Reset-DemoDrift.ps1](../../src/tools/Reset-DemoDrift.ps1).',
+            'Local group and marker-file reset remain lab debt until adapter behavior is pinned and rehearsed on the Windows lab endpoint.',
+            'Restore `HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient\EnableMulticast` to `0`.',
+            'Remove or restore the controlled local group `Baseline-ControlledLocal` if testing the deferred adapter path.',
+            'Remove or restore `C:\ProgramData\ProStateKit\Baseline\baseline-applied.txt` if testing the deferred adapter path.',
             'Clear generated runtime evidence outside committed synthetic samples.',
             'Confirm no reboot marker remains unless intentionally testing reboot behavior.'
         )

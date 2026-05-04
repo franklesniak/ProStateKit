@@ -8,32 +8,13 @@ metadata:
     description: ProStateKit Windows endpoint baseline sample
     labOnly: true
     controls:
-      - controlled local group
       - LLMNR registry value
+    deferredControls:
+      - controlled local group
       - demo marker file
 directives:
   version: '=3.2.0'
 resources:
-  - name: Windows PowerShell baseline resources
-    type: Microsoft.Windows/WindowsPowerShell
-    requireVersion: '=0.1.0'
-    properties:
-      resources:
-        - name: Controlled local group exists
-          type: PSDesiredStateConfiguration/Group
-          properties:
-            GroupName: Baseline-ControlledLocal
-            Ensure: Present
-            Description: ProStateKit controlled demo group
-            Members: []
-        - name: Baseline applied marker file
-          type: PSDesiredStateConfiguration/File
-          properties:
-            DestinationPath: 'C:\ProgramData\ProStateKit\Baseline\baseline-applied.txt'
-            Ensure: Present
-            Type: File
-            Contents: |
-              ProStateKit demo baseline marker
   - name: LLMNR disabled
     type: Microsoft.Windows/Registry
     requireVersion: '=1.0.0'

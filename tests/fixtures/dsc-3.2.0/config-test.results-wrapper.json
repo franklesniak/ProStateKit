@@ -1,8 +1,8 @@
 {
   "results": [
     {
-      "resourceName": "Windows PowerShell baseline resources",
-      "resourceType": "Microsoft.Windows/WindowsPowerShell",
+      "resourceName": "LLMNR disabled",
+      "resourceType": "Microsoft.Windows/Registry",
       "inDesiredState": true,
       "wasChanged": true,
       "errorMessage": null,

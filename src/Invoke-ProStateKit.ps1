@@ -22,7 +22,7 @@ param(
 
     [string] $OperationId,
 
-    [string] $DemoMarkerPath = 'C:\ProgramData\ProStateKit\Baseline\baseline-applied.txt',
+    [string] $DemoMarkerPath = '',
 
     [switch] $AllowLabLatest,
 
@@ -200,7 +200,12 @@ if ($Mode -eq 'Preflight') {
         if ($runnerStep.Name -eq 'DetectAfterDrift') {
             $driftPath = Join-Path -Path $bundleRootFull -ChildPath 'src/tools/New-DemoDrift.ps1'
             try {
-                & $driftPath -MarkerPath $DemoMarkerPath
+                $driftArguments = @{}
+                if (-not [string]::IsNullOrWhiteSpace($DemoMarkerPath)) {
+                    $driftArguments.MarkerPath = $DemoMarkerPath
+                }
+
+                & $driftPath @driftArguments
                 if ($LASTEXITCODE -ne 0) {
                     throw [System.InvalidOperationException]::new('Drift tool returned a non-zero exit code.')
                 }

@@ -16,16 +16,16 @@
 - Node.js 20 or later for `ValidateBundle` / `Preflight` YAML parsing in the preview toolchain.
 - A bundle built after `npm install`, so the selected `js-yaml` parser dependency is packaged under `node_modules/`.
 - Pinned `dsc.exe` version for the checked-in config: `3.2.0`.
-- Resource paths exercised by the checked-in config:
-  `Microsoft.Windows/Registry` `=1.0.0` and `Microsoft.Windows/WindowsPowerShell` `=0.1.0`.
-  The Windows PowerShell adapter contains the nested `PSDesiredStateConfiguration/Group`
-  and `PSDesiredStateConfiguration/File` resources.
+- Resource path exercised by the checked-in config: `Microsoft.Windows/Registry` `=1.0.0`.
+- Deferred demo candidates: controlled local group and marker file.
 
 ## DSC Configuration Under Test
 
 The demo uses `configs/baseline.dsc.yaml`, which mirrors `src/configs/baseline.windows.yaml`.
 The document MUST include `$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json`
 and `directives.version: '=3.2.0'`. DSC treats a missing `$schema` as a configuration validation failure.
+The runnable baseline intentionally avoids the Windows PowerShell adapter because adapter execution adds
+classic DSC module-resolution and CIM-serialization failure modes that are not needed for the registry demo.
 
 ## Bundle Build
 
@@ -81,7 +81,8 @@ Use synthetic fallback evidence until real lab evidence exists:
 pwsh -File .\src\tools\New-DemoDrift.ps1
 ```
 
-Expected preview result: removes the demo marker file. Registry and local-group drift steps remain lab debt until reset behavior is rehearsed on the pinned runtime.
+Expected preview result: sets `HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient\EnableMulticast` to `1`.
+Local-group and marker-file drift remain lab debt until adapter behavior is pinned and rehearsed.
 
 ## Detect After Drift
 

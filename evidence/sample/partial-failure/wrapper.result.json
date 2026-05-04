@@ -36,19 +36,11 @@
   },
   "resources": [
     {
-      "name": "Windows PowerShell baseline resources",
-      "type": "Microsoft.Windows/WindowsPowerShell",
-      "succeeded": false,
-      "changed": false,
-      "error": "Synthetic sample failure for controlled local group",
-      "rebootRequired": false
-    },
-    {
       "name": "LLMNR disabled",
       "type": "Microsoft.Windows/Registry",
-      "succeeded": true,
-      "changed": true,
-      "error": null,
+      "succeeded": false,
+      "changed": false,
+      "error": "Synthetic sample failure for LLMNR registry value",
       "rebootRequired": false
     }
   ],
@@ -62,7 +54,7 @@
   },
   "evidencePath": "evidence/sample/partial-failure",
   "errors": [
-    "Synthetic sample failure for controlled local group"
+    "Synthetic sample failure for LLMNR registry value"
   ],
   "warnings": []
 }

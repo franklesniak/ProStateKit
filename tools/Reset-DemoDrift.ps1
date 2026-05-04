@@ -1,6 +1,12 @@
 [CmdletBinding(SupportsShouldProcess)]
 param(
-    [string] $MarkerPath = 'C:\ProgramData\ProStateKit\Baseline\baseline-applied.txt'
+    [string] $RegistryPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient',
+
+    [string] $ValueName = 'EnableMulticast',
+
+    [int] $CompliantValue = 0,
+
+    [string] $MarkerPath = ''
 )
 
 $ErrorActionPreference = 'Stop'

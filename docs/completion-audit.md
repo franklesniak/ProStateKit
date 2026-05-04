@@ -61,7 +61,7 @@ This audit records current evidence. It is not a release sign-off, lab sign-off,
 | Step 17 | Create project tree. | `src/`, `planes/`, `configs/`, `runtime/`, `resources/`, `schemas/`, `docs/`, `evidence/sample/`, `tools/`, and tests exist. | Complete. |
 | Step 18 | Add fail-closed PowerShell runner and wrappers. | Common Runner and plane shims exist, use strict defaults, and fail closed without verified proof. | Complete for preview runner. |
 | Step 19 | Add tool scripts. | Pre-req, schema lint, analyzer, package, bundle, test-bundle, release-readiness, drift, reset, and secret helper scripts exist; secret helper, release-readiness, and missing-runtime paths fail closed. | Complete for preview tooling. |
-| Step 20 | Add sample DSC baseline YAML and JSON. | Sample configs model controlled local group, LLMNR registry value, and ProgramData marker with lab-use warnings. | Complete pending real resource-version validation. |
+| Step 20 | Add sample DSC baseline YAML and JSON. | Sample configs model the LLMNR registry value with lab-use warnings. Local group and ProgramData marker controls remain deferred until adapter behavior is pinned. | Complete pending lab validation. |
 | Step 21 | Add schemas and example fixtures. | Wrapper-result, bundle-manifest, and release-readiness schemas and valid/invalid fixtures exist and validate in tests. | Complete. |
 | Step 22 | Add sanitized evidence examples. | Five sample evidence states exist with raw output, normalized result, and summaries. | Complete. |
 | Step 23 | Add required docs under `docs/`. | Contract, evidence, exit-code, reboot, secrets, troubleshooting, resource-gap, packaging, runtime, architecture, and runbook docs exist. | Complete for preview docs. |

@@ -13,7 +13,7 @@ param(
 
     [string] $OperationId,
 
-    [string] $DemoMarkerPath = 'C:\ProgramData\ProStateKit\Baseline\baseline-applied.txt',
+    [string] $DemoMarkerPath = '',
 
     [switch] $AllowLabLatest
 )
