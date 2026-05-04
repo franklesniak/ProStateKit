@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$script:fakeRuntimePublishDir = $null
+$script:fakeRuntimeBinaryPath = $null
 
 BeforeAll {
     $script:testRoot = Split-Path -Path $PSCommandPath -Parent
@@ -9,20 +9,23 @@ BeforeAll {
     $script:repoRoot = Split-Path -Path $script:testsRoot -Parent
 }
 
-function Get-ProStateKitTestFakeRuntimePublishDirectory {
-    if (-not [string]::IsNullOrWhiteSpace($script:fakeRuntimePublishDir) -and (Test-Path -LiteralPath $script:fakeRuntimePublishDir -PathType Container)) {
-        return $script:fakeRuntimePublishDir
+function Get-ProStateKitTestFakeRuntimeBinary {
+    if (-not [string]::IsNullOrWhiteSpace($script:fakeRuntimeBinaryPath) -and (Test-Path -LiteralPath $script:fakeRuntimeBinaryPath -PathType Leaf)) {
+        return $script:fakeRuntimeBinaryPath
     }
 
-    $dotnet = Get-Command -Name 'dotnet' -CommandType Application -ErrorAction Stop
-    $dotnetPath = [string] $dotnet.Source
     $cacheRoot = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ('prostatekit-fake-runtime-{0}' -f $PID)
-    $sourceRoot = Join-Path -Path $cacheRoot -ChildPath 'src'
-    $publishRoot = Join-Path -Path $cacheRoot -ChildPath 'publish'
     Remove-Item -LiteralPath $cacheRoot -Recurse -Force -ErrorAction SilentlyContinue
-    [void] (New-Item -Path $sourceRoot -ItemType Directory -Force)
+    [void] (New-Item -Path $cacheRoot -ItemType Directory -Force)
 
-    Set-Content -LiteralPath (Join-Path -Path $sourceRoot -ChildPath 'Program.cs') -Encoding utf8 -Value @'
+    $sourcePath = Join-Path -Path $cacheRoot -ChildPath 'Program.cs'
+    $exeName = 'dsc'
+    if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
+        $exeName = 'dsc.exe'
+    }
+    $exePath = Join-Path -Path $cacheRoot -ChildPath $exeName
+
+    Set-Content -LiteralPath $sourcePath -Encoding utf8 -Value @'
 using System;
 using System.IO;
 
@@ -57,46 +60,52 @@ class Program
 }
 '@
 
-    Set-Content -LiteralPath (Join-Path -Path $sourceRoot -ChildPath 'fake-dsc.csproj') -Encoding utf8 -Value @'
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <AssemblyName>dsc</AssemblyName>
-    <Nullable>disable</Nullable>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
-    <UseAppHost>true</UseAppHost>
-  </PropertyGroup>
-</Project>
-'@
-
-    $publishOutput = & $dotnetPath publish $sourceRoot --configuration Release --output $publishRoot --nologo --verbosity minimal 2>&1
-    $publishExitCode = $LASTEXITCODE
-    $publishOutputText = ($publishOutput | ForEach-Object -Process { [string] $_ }) -join "`n"
-    if ($publishExitCode -ne 0) {
-        throw [System.InvalidOperationException]::new(('dotnet publish failed (exit {0}): {1}' -f $publishExitCode, $publishOutputText))
-    }
-
-    $expectedExeName = 'dsc'
     if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
-        $expectedExeName = 'dsc.exe'
-    }
-    $expectedExePath = Join-Path -Path $publishRoot -ChildPath $expectedExeName
-    if (-not (Test-Path -LiteralPath $expectedExePath -PathType Leaf)) {
-        $publishedListing = (Get-ChildItem -LiteralPath $publishRoot -File -ErrorAction SilentlyContinue | ForEach-Object -Process { $_.Name }) -join ', '
-        throw [System.IO.FileNotFoundException]::new(('Expected published binary at {0} but it was not produced. Publish dir contained: [{1}]. Publish output: {2}' -f $expectedExePath, $publishedListing, $publishOutputText), $expectedExePath)
+        $cscCandidates = @(
+            (Join-Path -Path $env:WINDIR -ChildPath 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'),
+            (Join-Path -Path $env:WINDIR -ChildPath 'Microsoft.NET\Framework\v4.0.30319\csc.exe')
+        )
+        $csc = $cscCandidates | Where-Object -FilterScript { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+        if ($null -eq $csc) {
+            throw [System.IO.FileNotFoundException]::new(
+                ('No csc.exe found at expected .NET Framework paths: {0}' -f ($cscCandidates -join ', ')))
+        }
+
+        $cscOutput = & $csc /nologo /target:exe /optimize /out:$exePath $sourcePath 2>&1
+        $cscExit = $LASTEXITCODE
+        $cscOutputText = ($cscOutput | ForEach-Object -Process { [string] $_ }) -join "`n"
+        if ($cscExit -ne 0) {
+            throw [System.InvalidOperationException]::new(
+                ('csc.exe failed to compile fake DSC runtime (exit {0}): {1}' -f $cscExit, $cscOutputText))
+        }
+    } else {
+        # POSIX path uses a shell script directly; nothing to compile.
+        Set-Content -LiteralPath $exePath -Encoding utf8 -Value @'
+#!/bin/sh
+if [ "$1" = "--version" ]; then
+  echo "3.2.0-test"
+  exit 0
+fi
+exit 0
+'@
+        & chmod +x $exePath
     }
 
-    $sanityOutput = & $expectedExePath --version 2>&1
-    $sanityExitCode = $LASTEXITCODE
-    $sanityOutputText = ([string] $sanityOutput).Trim()
-    if ($sanityExitCode -ne 0 -or $sanityOutputText -ne '3.2.0-test') {
-        throw [System.InvalidOperationException]::new(('Fake DSC runtime sanity check failed (exit {0}): expected "3.2.0-test", got "{1}"' -f $sanityExitCode, $sanityOutputText))
+    if (-not (Test-Path -LiteralPath $exePath -PathType Leaf)) {
+        throw [System.IO.FileNotFoundException]::new(
+            ('Fake DSC runtime binary was not produced at {0}.' -f $exePath), $exePath)
     }
 
-    $script:fakeRuntimePublishDir = $publishRoot
-    return $script:fakeRuntimePublishDir
+    $sanityOutput = & $exePath --version 2>&1
+    $sanityExit = $LASTEXITCODE
+    $sanityOutputText = (($sanityOutput | ForEach-Object -Process { [string] $_ }) -join "`n").Trim()
+    if ($sanityExit -ne 0 -or $sanityOutputText -ne '3.2.0-test') {
+        throw [System.InvalidOperationException]::new(
+            ('Fake DSC runtime sanity check failed (exit {0}): expected "3.2.0-test", got "{1}"' -f $sanityExit, $sanityOutputText))
+    }
+
+    $script:fakeRuntimeBinaryPath = $exePath
+    return $script:fakeRuntimeBinaryPath
 }
 
 function Copy-ProStateKitTestFakeRuntime {
@@ -105,13 +114,14 @@ function Copy-ProStateKitTestFakeRuntime {
         [string] $DestinationPath
     )
 
-    $publishDir = Get-ProStateKitTestFakeRuntimePublishDirectory
+    $sourceBinary = Get-ProStateKitTestFakeRuntimeBinary
     $destinationDir = Split-Path -Path $DestinationPath -Parent
     if (-not [string]::IsNullOrWhiteSpace($destinationDir)) {
         [void] (New-Item -Path $destinationDir -ItemType Directory -Force)
     }
-    foreach ($publishedFile in Get-ChildItem -LiteralPath $publishDir -File) {
-        Copy-Item -LiteralPath $publishedFile.FullName -Destination (Join-Path -Path $destinationDir -ChildPath $publishedFile.Name) -Force
+    Copy-Item -LiteralPath $sourceBinary -Destination $DestinationPath -Force
+    if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
+        & chmod +x $DestinationPath
     }
 }
 
