@@ -2614,7 +2614,7 @@ Describe -Name 'Contribution instruction guardrails' -Fixture {
         $templatePath = Join-Path -Path $script:repoRoot -ChildPath '.github/pull_request_template.md'
         $template = Get-Content -LiteralPath $templatePath -Raw
         $requiredTerms = @(
-            '[contributing guidelines](../blob/HEAD/CONTRIBUTING.md)',
+            '[contributing guidelines](https://github.com/franklesniak/ProStateKit/blob/HEAD/CONTRIBUTING.md)',
             'I have run `pre-commit run --all-files` locally or verified equivalent CI/pre-commit checks passed',
             'I have reviewed and committed all auto-fixes made by pre-commit hooks',
             'Detect behavior still maps to `dsc config test`',
