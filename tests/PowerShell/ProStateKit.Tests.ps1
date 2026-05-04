@@ -1,10 +1,100 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
+$script:fakeRuntimePublishDir = $null
+
 BeforeAll {
     $script:testRoot = Split-Path -Path $PSCommandPath -Parent
     $script:testsRoot = Split-Path -Path $script:testRoot -Parent
     $script:repoRoot = Split-Path -Path $script:testsRoot -Parent
+}
+
+function Get-ProStateKitTestFakeRuntimePublishDirectory {
+    if (-not [string]::IsNullOrWhiteSpace($script:fakeRuntimePublishDir) -and (Test-Path -LiteralPath $script:fakeRuntimePublishDir -PathType Container)) {
+        return $script:fakeRuntimePublishDir
+    }
+
+    $dotnet = Get-Command -Name 'dotnet' -CommandType Application -ErrorAction Stop
+    $cacheRoot = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ('prostatekit-fake-runtime-{0}' -f $PID)
+    $sourceRoot = Join-Path -Path $cacheRoot -ChildPath 'src'
+    $publishRoot = Join-Path -Path $cacheRoot -ChildPath 'publish'
+    Remove-Item -LiteralPath $cacheRoot -Recurse -Force -ErrorAction SilentlyContinue
+    [void] (New-Item -Path $sourceRoot -ItemType Directory -Force)
+
+    Set-Content -LiteralPath (Join-Path -Path $sourceRoot -ChildPath 'Program.cs') -Encoding utf8 -Value @'
+using System;
+using System.IO;
+
+internal static class Program
+{
+    private const string CompliantUnchanged = "{\"resources\":[{\"name\":\"Fake resource\",\"type\":\"ProStateKit/Fake\",\"succeeded\":true,\"changed\":false,\"error\":null,\"rebootRequired\":false}]}";
+    private const string CompliantChanged = "{\"resources\":[{\"name\":\"Fake resource\",\"type\":\"ProStateKit/Fake\",\"succeeded\":true,\"changed\":true,\"error\":null,\"rebootRequired\":false}]}";
+    private const string DriftDetected = "{\"resources\":[{\"name\":\"Fake resource\",\"type\":\"ProStateKit/Fake\",\"succeeded\":false,\"changed\":false,\"error\":\"Synthetic drift fixture\",\"rebootRequired\":false}]}";
+
+    private static int Main(string[] args)
+    {
+        if (args.Length > 0 && string.Equals(args[0], "--version", StringComparison.Ordinal))
+        {
+            Console.WriteLine("3.2.0-test");
+            return 0;
+        }
+
+        string? markerPath = Environment.GetEnvironmentVariable("PROSTATEKIT_TEST_FAKE_DSC_MARKER");
+        if (string.IsNullOrEmpty(markerPath))
+        {
+            return 0;
+        }
+
+        bool isSet = args.Length > 1 && string.Equals(args[1], "set", StringComparison.Ordinal);
+        if (isSet)
+        {
+            File.WriteAllText(markerPath, "present\n");
+            Console.WriteLine(CompliantChanged);
+            return 0;
+        }
+
+        Console.WriteLine(File.Exists(markerPath) ? CompliantUnchanged : DriftDetected);
+        return 0;
+    }
+}
+'@
+
+    Set-Content -LiteralPath (Join-Path -Path $sourceRoot -ChildPath 'fake-dsc.csproj') -Encoding utf8 -Value @'
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>dsc</AssemblyName>
+    <Nullable>enable</Nullable>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+</Project>
+'@
+
+    $publishOutput = & $dotnet.Source publish $sourceRoot --configuration Release --output $publishRoot --nologo --verbosity quiet 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw [System.InvalidOperationException]::new(('Failed to build fake DSC runtime test binary: {0}' -f ($publishOutput -join "`n")))
+    }
+
+    $script:fakeRuntimePublishDir = $publishRoot
+    return $script:fakeRuntimePublishDir
+}
+
+function Copy-ProStateKitTestFakeRuntime {
+    param(
+        [Parameter(Mandatory)]
+        [string] $DestinationPath
+    )
+
+    $publishDir = Get-ProStateKitTestFakeRuntimePublishDirectory
+    $destinationDir = Split-Path -Path $DestinationPath -Parent
+    if (-not [string]::IsNullOrWhiteSpace($destinationDir)) {
+        [void] (New-Item -Path $destinationDir -ItemType Directory -Force)
+    }
+    foreach ($publishedFile in Get-ChildItem -LiteralPath $publishDir -File) {
+        Copy-Item -LiteralPath $publishedFile.FullName -Destination (Join-Path -Path $destinationDir -ChildPath $publishedFile.Name) -Force
+    }
 }
 
 Describe -Name 'ProStateKit schema examples' -Fixture {
@@ -282,7 +372,7 @@ Describe -Name 'Fail-closed behavior' -Fixture {
             [void] (New-Item -Path (Split-Path -Path $runtimePath -Parent) -ItemType Directory -Force)
             Copy-Item -LiteralPath (Join-Path -Path $script:repoRoot -ChildPath 'configs/baseline.dsc.yaml') -Destination $configDestination -Force
             if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
-                Set-Content -LiteralPath $runtimePath -Value '@echo 3.2.0-test' -Encoding ascii
+                Copy-ProStateKitTestFakeRuntime -DestinationPath $runtimePath
             } else {
                 Set-Content -LiteralPath $runtimePath -Value @'
 #!/usr/bin/env sh
@@ -1013,14 +1103,10 @@ Describe -Name 'Bundle tooling' -Fixture {
             Set-Content -LiteralPath $runtimeCompanionPath -Encoding utf8 -Value 'runtime companion fixture'
 
             if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
-                Set-Content -LiteralPath $script:bundleRuntimePath -Encoding ascii -Value @'
-@echo off
-if "%1"=="--version" (
-  echo 3.2.0-test
-  exit /b 0
-)
-exit /b 0
-'@
+                # PowerShell on Windows invokes native commands via CreateProcess, which
+                # rejects a non-PE file regardless of its `.exe` extension. Drop in a real
+                # tiny .NET console binary so `& $dscPath --version` actually executes.
+                Copy-ProStateKitTestFakeRuntime -DestinationPath $script:bundleRuntimePath
             } else {
                 Set-Content -LiteralPath $script:bundleRuntimePath -Encoding utf8 -Value @'
 #!/bin/sh
@@ -1558,25 +1644,8 @@ throw [System.InvalidOperationException]::new('Synthetic package validation fail
             Set-Content -LiteralPath $markerPath -Value 'present' -Encoding utf8
             [void] (New-Item -Path (Split-Path -Path $script:bundleRuntimePath -Parent) -ItemType Directory -Force)
             if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
-                $escapedMarkerPath = $markerPath.Replace('\', '\\')
-                Set-Content -LiteralPath $script:bundleRuntimePath -Encoding ascii -Value @"
-@echo off
-if "%1"=="--version" (
-  echo 3.2.0-test
-  exit /b 0
-)
-if "%2"=="set" (
-  echo present>"$markerPath"
-  echo {"resources":[{"name":"Fake resource","type":"ProStateKit/Fake","succeeded":true,"changed":true,"error":null,"rebootRequired":false}]}
-  exit /b 0
-)
-if exist "$escapedMarkerPath" (
-  echo {"resources":[{"name":"Fake resource","type":"ProStateKit/Fake","succeeded":true,"changed":false,"error":null,"rebootRequired":false}]}
-) else (
-  echo {"resources":[{"name":"Fake resource","type":"ProStateKit/Fake","succeeded":false,"changed":false,"error":"Synthetic drift fixture","rebootRequired":false}]}
-)
-exit /b 0
-"@
+                Copy-ProStateKitTestFakeRuntime -DestinationPath $script:bundleRuntimePath
+                $env:PROSTATEKIT_TEST_FAKE_DSC_MARKER = $markerPath
             } else {
                 Set-Content -LiteralPath $script:bundleRuntimePath -Encoding utf8 -Value @"
 #!/bin/sh
@@ -1621,6 +1690,7 @@ exit 0
             $report.succeeded | Should -BeTrue
             @($report.steps | Where-Object -FilterScript { -not $_.succeeded }).Count | Should -Be 0
         } finally {
+            Remove-Item -LiteralPath Env:\PROSTATEKIT_TEST_FAKE_DSC_MARKER -ErrorAction SilentlyContinue
         }
     }
 }
