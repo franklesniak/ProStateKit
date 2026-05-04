@@ -235,14 +235,25 @@ Runtime review checklist:
 4. Review the extracted payload.
 5. Copy the full reviewed archive payload into `runtime/dsc/`; do not copy only `dsc.exe`.
 6. Run `pwsh -File .\tools\Build-Bundle.ps1`.
-7. Replace the staged bundle root and validate the staged bundle:
+7. Extract the bundle ZIP into the staged bundle root:
 
    ```powershell
-   $StagedBundleRoot = 'REPLACE_WITH_STAGED_BUNDLE_ROOT'
-   pwsh -File .\tools\Test-Bundle.ps1 -BundleRoot $StagedBundleRoot
+   Expand-Archive -Path .\dist\ProStateKit-0.1.0.zip -DestinationPath .\dist\ProStateKit-0.1.0 -Force
    ```
 
-8. Follow [Runtime Distribution](../runtime-distribution.md) before committing runtime files.
+8. Validate the staged bundle:
+
+   ```powershell
+   $StagedBundleRoot = '.\dist\ProStateKit-0.1.0'
+   Push-Location -LiteralPath $StagedBundleRoot
+   try {
+       & '.\tools\Test-Bundle.ps1' -BundleRoot '.'
+   } finally {
+       Pop-Location
+   }
+   ```
+
+9. Follow [Runtime Distribution](../runtime-distribution.md) before committing runtime files.
 
 ## Common Fresh-VM Problems
 

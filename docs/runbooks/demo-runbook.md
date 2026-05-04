@@ -42,7 +42,8 @@ Expected preview result before runtime pinning: there is no ZIP to extract becau
 ## Local Preflight
 
 ```powershell
-pwsh -File .\planes\local\Invoke-LocalPreflight.ps1 -BundleRoot . -RuntimeMode PinnedBundle
+Set-Location -LiteralPath 'C:\ProgramData\ProStateKit\Bundle'
+& '.\planes\local\Invoke-LocalPreflight.ps1' -BundleRoot . -RuntimeMode PinnedBundle
 ```
 
 Expected preview result on a clean checkout without `bundle.manifest.json` and `runtime/dsc/dsc.exe`: exit `1` with a report under `C:\ProgramData\ProStateKit\Evidence\Preflight\<OperationId>\preflight.report.json`.
