@@ -47,7 +47,7 @@ This audit records current evidence. It is not a release sign-off, lab sign-off,
 | Step 3 | Enable `triage` label in issue templates. | Bug, feature, and documentation issue forms include `triage`. | Complete. |
 | Step 4 | Update `package.json` metadata. | `package.json` uses `prostatekit`, `0.1.0`, preview description, private package setting, ProStateKit keywords, and Frank Lesniak and Blake Cherry as author. | Complete. |
 | Step 5 | Remove unused Python and Terraform support while keeping validation hooks. | Python/Terraform app files, workflows, templates, and instruction files are removed; JSON/YAML/Actions/Markdown validation hooks remain. | Complete. |
-| Step 6 | Customize pull request template. | `.github/pull_request_template.md` contains unconditional pre-commit checks, ProStateKit contract checks, docs checklist, and relative contributing link. | Complete. |
+| Step 6 | Customize pull request template. | `.github/pull_request_template.md` contains unconditional pre-commit checks, ProStateKit contract checks, docs checklist, and absolute contributing link. | Complete. |
 | Step 7 | Customize Copilot and agent instructions. | `.github/copilot-instructions.md`, modular instructions, `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` carry ProStateKit safety, runtime, evidence, and fail-closed rules. | Complete. |
 | Step 8 | Replace README. | `README.md` describes the preview starter kit, native-first rule, execution model, evidence, packaging, support, security, and attribution. | Complete. |
 | Step 9 | Customize contributing guide. | `CONTRIBUTING.md` requires validation, tests for Runner behavior, synchronized schema/docs updates, and sanitized evidence. | Complete. |

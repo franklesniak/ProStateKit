@@ -63,7 +63,7 @@ class Program
         $exePath = Join-Path -Path $cacheRoot -ChildPath $exeName
 
         if (Test-Path -LiteralPath $exePath -PathType Leaf) {
-            $cachedSanityOutput = & $exePath --version 2>&1
+            $cachedSanityOutput = & $exePath --version
             $cachedSanityExit = $LASTEXITCODE
             $cachedSanityText = (($cachedSanityOutput | ForEach-Object -Process { [string] $_ }) -join "`n").Trim()
             if ($cachedSanityExit -eq 0 -and $cachedSanityText -eq '3.2.0-test') {
@@ -114,7 +114,7 @@ exit 0
                 ('Fake DSC runtime binary was not produced at {0}.' -f $exePath), $exePath)
         }
 
-        $sanityOutput = & $exePath --version 2>&1
+        $sanityOutput = & $exePath --version
         $sanityExit = $LASTEXITCODE
         $sanityOutputText = (($sanityOutput | ForEach-Object -Process { [string] $_ }) -join "`n").Trim()
         if ($sanityExit -ne 0 -or $sanityOutputText -ne '3.2.0-test') {
