@@ -2641,55 +2641,50 @@ Describe -Name 'Contribution instruction guardrails' -Fixture {
             @{
                 Path = 'AGENTS.md'
                 Terms = @(
-                    'Read [.github/copilot-instructions.md](.github/copilot-instructions.md) before making changes.',
-                    'No secrets in configs, examples, logs, transcripts, stdout, prompts, normalized evidence, or raw evidence.',
-                    'No live downloads in endpoint runtime paths.',
-                    'Detect maps to `dsc config test`.',
-                    'Remediate maps to `dsc config set`, then verifies with `dsc config test`.',
-                    'Preserve raw DSC output before normalization.',
-                    'Fail closed when proof is missing.',
-                    'Unimplemented paths must be marked `TODO:` and return non-zero or throw.'
+                    '# Agent Instructions for OpenAI Codex CLI',
+                    '`.github/copilot-instructions.md`',
+                    'No secrets in code or repo; never hardcode API keys, tokens, credentials, or connection strings.',
+                    'Treat all external input as untrusted.',
+                    'Respect allowlisted file access boundaries; reject path traversal and symlink escapes.',
+                    'Run `pre-commit run --all-files` before every commit.',
+                    'Invoke-Pester -Path tests/ -Output Detailed'
                 )
             }
             @{
                 Path = 'CLAUDE.md'
                 Terms = @(
-                    'Read [.github/copilot-instructions.md](.github/copilot-instructions.md) before making changes.',
-                    'Endpoint runtime paths must not perform live downloads.',
-                    'Package runtime dependencies only when they are pinned, bundled, and recorded in the manifest.',
-                    'Detect maps to `dsc config test`; Remediate maps to `dsc config set` plus verification `dsc config test`.',
-                    'Preserve raw DSC output before deriving `wrapper.result.json`.',
-                    'Missing proof, parser failure, unknown DSC shape, resource failure, or partial convergence fails closed.',
-                    'Keep docs accurate to preview status; do not claim production readiness.'
+                    '# Agent Instructions for Claude Code',
+                    '`.github/copilot-instructions.md`',
+                    'No secrets in code or repo; never hardcode API keys, tokens, credentials, or connection strings.',
+                    'Treat all external input as untrusted.',
+                    'Respect allowlisted file access boundaries; reject path traversal and symlink escapes.',
+                    'Run `pre-commit run --all-files` before every commit.',
+                    'Invoke-Pester -Path tests/ -Output Detailed'
                 )
             }
             @{
                 Path = 'GEMINI.md'
                 Terms = @(
-                    'Read [.github/copilot-instructions.md](.github/copilot-instructions.md) before making changes.',
-                    'Runtime paths do not perform live downloads.',
-                    'Detect maps to `dsc config test`; Remediate maps to `dsc config set` plus verification `dsc config test`.',
-                    'Raw DSC output is preserved before normalized evidence is derived.',
-                    'Missing proof, unknown result shape, parser failure, resource failure, or partial convergence fails closed.',
-                    'PowerShell changes require strict error handling and Pester coverage where behavior changes.',
-                    'Documentation must be practitioner-first, direct, concrete, sponsor-safe, and stage-safe.'
+                    '# Agent Instructions for Gemini Code Assist',
+                    '`.github/copilot-instructions.md`',
+                    'No secrets in code or repo; never hardcode API keys, tokens, credentials, or connection strings.',
+                    'Treat all external input as untrusted.',
+                    'Respect allowlisted file access boundaries; reject path traversal and symlink escapes.',
+                    'Run `pre-commit run --all-files` before every commit.',
+                    'Invoke-Pester -Path tests/ -Output Detailed'
                 )
             }
             @{
                 Path = '.github/copilot-instructions.md'
                 Terms = @(
-                    'No secrets in configuration documents, examples, logs, transcripts, stdout, prompts, normalized evidence, or raw evidence committed to the repository.',
-                    'No live downloads in endpoint runtime paths.',
-                    'DSC binary, PowerShell, resources, modules, wrapper scripts, and configurations must be pinned and bundled when packaging.',
-                    'The wrapper must fail closed when proof is missing.',
-                    'Unknown DSC result shape, parse failure, missing evidence, partial convergence, or resource failure must not produce green status.',
-                    'Preserve raw DSC output before normalization.',
-                    'Normalize evidence into the stable wrapper-owned schema.',
-                    'Detect maps to `dsc config test`.',
-                    'Remediate maps to `dsc config set`, then verifies with `dsc config test`.',
-                    'Reboots must be re-entrant and durable.',
-                    'Do not invent a pinned DSC version, hash, source commit, timestamp, tenant value, account name, or machine name.',
-                    'Mark unimplemented behavior with `TODO:` and make the execution path fail non-zero.'
+                    '# Repository Copilot Instructions (Repo-Wide Constitution)',
+                    'Non-negotiable Safety and Security Rules',
+                    '**No secrets in code or repo**',
+                    '**Treat all external input as untrusted**',
+                    '**Allowlisted file access only**',
+                    'Refuse path traversal and symlink escapes.',
+                    'Pre-commit Discipline',
+                    '`pre-commit run --all-files`'
                 )
             }
         )

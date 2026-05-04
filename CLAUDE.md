@@ -38,7 +38,6 @@ This file intentionally keeps only a minimal inline summary of the highest-prior
     - [`.github/instructions/json.instructions.md`](.github/instructions/json.instructions.md)
     - [`.github/instructions/yaml.instructions.md`](.github/instructions/yaml.instructions.md)
     - [`schemas/README.md`](schemas/README.md)
-    - the **Built-in Schema Validation for Real Load-Bearing Configuration Files** ADR in [`.github/TEMPLATE_DESIGN_DECISIONS.md`](.github/TEMPLATE_DESIGN_DECISIONS.md)
 
 - **Modular instruction files**
   - Read the relevant file under `.github/instructions/` before modifying matching files:
