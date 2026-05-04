@@ -1,8 +1,8 @@
 {
   "results": [
     {
-      "resourceName": "Controlled local group exists",
-      "resourceType": "Microsoft.Windows/Group",
+      "resourceName": "Windows PowerShell baseline resources",
+      "resourceType": "Microsoft.Windows/WindowsPowerShell",
       "inDesiredState": true,
       "wasChanged": true,
       "errorMessage": null,

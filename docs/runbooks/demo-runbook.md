@@ -15,8 +15,17 @@
 - ProStateKit checkout or built bundle.
 - Node.js 20 or later for `ValidateBundle` / `Preflight` YAML parsing in the preview toolchain.
 - A bundle built after `npm install`, so the selected `js-yaml` parser dependency is packaged under `node_modules/`.
-- Pinned `dsc.exe` version: TBD.
-- Pinned resource modules: TBD.
+- Pinned `dsc.exe` version for the checked-in config: `3.2.0`.
+- Resource paths exercised by the checked-in config:
+  `Microsoft.Windows/Registry` `=1.0.0` and `Microsoft.Windows/WindowsPowerShell` `=0.1.0`.
+  The Windows PowerShell adapter contains the nested `PSDesiredStateConfiguration/Group`
+  and `PSDesiredStateConfiguration/File` resources.
+
+## DSC Configuration Under Test
+
+The demo uses `configs/baseline.dsc.yaml`, which mirrors `src/configs/baseline.windows.yaml`.
+The document MUST include `$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json`
+and `directives.version: '=3.2.0'`. DSC treats a missing `$schema` as a configuration validation failure.
 
 ## Bundle Build
 
@@ -72,7 +81,7 @@ Use synthetic fallback evidence until real lab evidence exists:
 pwsh -File .\src\tools\New-DemoDrift.ps1
 ```
 
-Expected preview result: removes the demo marker file. Registry and local-group drift steps remain lab debt until the exact DSC resource versions are pinned.
+Expected preview result: removes the demo marker file. Registry and local-group drift steps remain lab debt until reset behavior is rehearsed on the pinned runtime.
 
 ## Detect After Drift
 
@@ -105,6 +114,12 @@ pwsh -File .\src\tools\Reset-DemoDrift.ps1
 ## Fallback Paths
 
 Use checked-in synthetic evidence if runtime, parser, resource, reboot, or evidence write behavior is not ready for stage rehearsal. Do not present synthetic output as live endpoint proof.
+
+Parser or schema failure triage:
+
+- Confirm the YAML file contains the top-level `$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json`.
+- Confirm `directives.version` matches the pinned `dsc.exe` version selected for the rehearsal.
+- Re-run `pwsh -File .\tools\Convert-ConfigYamlToJson.ps1` and inspect the generated JSON mirror.
 
 Fallback captures to prepare before the talk:
 

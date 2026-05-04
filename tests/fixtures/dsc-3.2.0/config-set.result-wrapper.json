@@ -1,8 +1,8 @@
 {
   "result": [
     {
-      "name": "Baseline-applied marker file",
-      "type": "Microsoft.Windows/File",
+      "name": "Windows PowerShell baseline resources",
+      "type": "Microsoft.Windows/WindowsPowerShell",
       "result": "Succeeded",
       "changed": true,
       "message": null,

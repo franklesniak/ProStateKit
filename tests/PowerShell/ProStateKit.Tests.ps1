@@ -1802,6 +1802,78 @@ Describe -Name 'Configuration hygiene' -Fixture {
         }
     }
 
+    It -Name 'Authored baseline YAML files declare required DSC v3 schema and version directive' -Test {
+        $configPaths = @(
+            Join-Path -Path $script:repoRoot -ChildPath 'src/configs/baseline.windows.yaml'
+            Join-Path -Path $script:repoRoot -ChildPath 'configs/baseline.dsc.yaml'
+        )
+        $requiredTerms = @(
+            '$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json',
+            'directives:',
+            "version: '=3.2.0'"
+        )
+
+        foreach ($configPath in $configPaths) {
+            $content = Get-Content -LiteralPath $configPath -Raw
+            foreach ($requiredTerm in $requiredTerms) {
+                $content | Should -Match ([regex]::Escape($requiredTerm)) -Because $configPath
+            }
+        }
+    }
+
+    It -Name 'Baseline configs do not retain placeholder markers' -Test {
+        $configPaths = @(
+            Join-Path -Path $script:repoRoot -ChildPath 'src/configs/baseline.windows.yaml'
+            Join-Path -Path $script:repoRoot -ChildPath 'src/configs/baseline.windows.json'
+            Join-Path -Path $script:repoRoot -ChildPath 'configs/baseline.dsc.yaml'
+            Join-Path -Path $script:repoRoot -ChildPath 'configs/generated/baseline.dsc.json'
+        )
+
+        foreach ($configPath in $configPaths) {
+            $content = Get-Content -LiteralPath $configPath -Raw
+            $content | Should -Not -Match '(?i)\b(TODO|TBD)\b' -Because $configPath
+        }
+    }
+
+    It -Name 'Baseline DSC resource names satisfy DSC schema-safe pattern' -Test {
+        $configPath = Join-Path -Path $script:repoRoot -ChildPath 'src/configs/baseline.windows.json'
+        $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
+        $resources = @($config.resources)
+
+        $resources | Should -Not -BeNullOrEmpty
+        foreach ($resource in $resources) {
+            $resource.name | Should -Match '^[a-zA-Z0-9 ]+$' -Because $resource.name
+            if ($resource.properties.PSObject.Properties.Name -contains 'resources') {
+                foreach ($nestedResource in @($resource.properties.resources)) {
+                    $nestedResource.name | Should -Match '^[a-zA-Z0-9 ]+$' -Because $nestedResource.name
+                }
+            }
+        }
+    }
+
+    It -Name 'Baseline uses DSC 3.2 listed resource types at the top level' -Test {
+        $configPath = Join-Path -Path $script:repoRoot -ChildPath 'src/configs/baseline.windows.json'
+        $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
+        $resources = @($config.resources)
+        $resourceTypes = @($resources | ForEach-Object -Process { $_.type })
+
+        $resources | Should -Not -BeNullOrEmpty
+        $resourceTypes | Should -Contain 'Microsoft.Windows/WindowsPowerShell'
+        $resourceTypes | Should -Contain 'Microsoft.Windows/Registry'
+        $resourceTypes | Should -Not -Contain 'PSDesiredStateConfiguration/Group'
+        $resourceTypes | Should -Not -Contain 'PSDesiredStateConfiguration/File'
+
+        $adapter = @($resources | Where-Object -FilterScript { $_.type -eq 'Microsoft.Windows/WindowsPowerShell' })[0]
+        $registry = @($resources | Where-Object -FilterScript { $_.type -eq 'Microsoft.Windows/Registry' })[0]
+
+        $adapter.requireVersion | Should -Be '=0.1.0'
+        $registry.requireVersion | Should -Be '=1.0.0'
+        @($adapter.properties.resources | ForEach-Object -Process { $_.type }) |
+            Should -Contain 'PSDesiredStateConfiguration/Group'
+        @($adapter.properties.resources | ForEach-Object -Process { $_.type }) |
+            Should -Contain 'PSDesiredStateConfiguration/File'
+    }
+
     It -Name 'Sample evidence does not contain secret-shaped or environment-specific tokens' -Test {
         $evidenceRoot = Join-Path -Path $script:repoRoot -ChildPath 'evidence/sample'
         $blockedPatterns = @(
@@ -3127,8 +3199,14 @@ Describe -Name 'Documentation and prompt guardrails' -Fixture {
         $requiredTerms = @(
             'Commands are preview-stage and fail closed until pinned DSC runtime integration is completed.',
             'Windows lab endpoint with permission to test DSC v3 resources.',
-            'Pinned `dsc.exe` version: TBD.',
-            'Pinned resource modules: TBD.',
+            'Pinned `dsc.exe` version for the checked-in config: `3.2.0`.',
+            'Resource paths exercised by the checked-in config:',
+            '`Microsoft.Windows/Registry` `=1.0.0` and `Microsoft.Windows/WindowsPowerShell` `=0.1.0`.',
+            'The Windows PowerShell adapter contains the nested `PSDesiredStateConfiguration/Group`',
+            '## DSC Configuration Under Test',
+            '$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json',
+            'directives.version: ''=3.2.0''',
+            'DSC treats a missing `$schema` as a configuration validation failure.',
             'pwsh -File .\tools\Build-Bundle.ps1',
             'Expected preview result without a pinned runtime: non-zero failure stating that the pinned DSC runtime is required, with no partial release artifact.',
             'Set-Location -LiteralPath ''C:\ProgramData\ProStateKit\Bundle''',
@@ -3143,12 +3221,16 @@ Describe -Name 'Documentation and prompt guardrails' -Fixture {
             'evidence/sample/partial-failure/wrapper.result.json',
             'evidence/sample/parse-failure/summary.txt',
             'pwsh -File .\src\tools\New-DemoDrift.ps1',
-            'Registry and local-group drift steps remain lab debt until the exact DSC resource versions are pinned.',
+            'Registry and local-group drift steps remain lab debt until reset behavior is rehearsed on the pinned runtime.',
             'pwsh -File .\src\Invoke-ProStateKit.ps1 -Mode Remediate -Plane Local -ConfigPath .\configs\baseline.dsc.yaml -RuntimeMode PinnedBundle -BundleRoot .',
             'Expected lab result after runtime pinning: exit `0` only after post-set verification proves compliance.',
             'Use the same command as Known-Good Detect.',
             'pwsh -File .\src\tools\Reset-DemoDrift.ps1',
             'Do not present synthetic output as live endpoint proof.',
+            'Parser or schema failure triage:',
+            'Confirm the YAML file contains the top-level `$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json`.',
+            'Confirm `directives.version` matches the pinned `dsc.exe` version selected for the rehearsal.',
+            'Re-run `pwsh -File .\tools\Convert-ConfigYamlToJson.ps1` and inspect the generated JSON mirror.',
             'Explain operating model',
             'Open evidence and explain false-green prevention',
             'TODO: replace targets with measured timings after two clean rehearsals.',

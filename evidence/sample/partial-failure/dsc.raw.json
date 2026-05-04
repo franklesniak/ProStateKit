@@ -3,14 +3,14 @@
   "operation": "set-then-test",
   "resources": [
     {
-      "name": "Controlled local group exists",
-      "type": "Microsoft.Windows/Group",
+      "name": "Windows PowerShell baseline resources",
+      "type": "Microsoft.Windows/WindowsPowerShell",
       "setSucceeded": false,
-      "message": "Synthetic sample failure"
+      "message": "Synthetic sample failure for controlled local group"
     },
     {
-      "name": "Baseline-applied marker file",
-      "type": "Microsoft.Windows/File",
+      "name": "LLMNR disabled",
+      "type": "Microsoft.Windows/Registry",
       "setSucceeded": true
     }
   ]

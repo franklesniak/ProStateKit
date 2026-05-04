@@ -36,16 +36,16 @@
   },
   "resources": [
     {
-      "name": "Controlled local group exists",
-      "type": "Microsoft.Windows/Group",
+      "name": "Windows PowerShell baseline resources",
+      "type": "Microsoft.Windows/WindowsPowerShell",
       "succeeded": false,
       "changed": false,
-      "error": "Synthetic sample failure",
+      "error": "Synthetic sample failure for controlled local group",
       "rebootRequired": false
     },
     {
-      "name": "Baseline-applied marker file",
-      "type": "Microsoft.Windows/File",
+      "name": "LLMNR disabled",
+      "type": "Microsoft.Windows/Registry",
       "succeeded": true,
       "changed": true,
       "error": null,
@@ -62,7 +62,7 @@
   },
   "evidencePath": "evidence/sample/partial-failure",
   "errors": [
-    "Synthetic sample failure"
+    "Synthetic sample failure for controlled local group"
   ],
   "warnings": []
 }
