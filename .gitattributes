@@ -31,14 +31,6 @@ tests/**/__snapshots__/**     text eol=lf
 tests/**/fixtures/**          text eol=lf
 testdata/**                   text eol=lf
 
-# Git metadata: keep the attribute policy itself stable on Windows checkouts.
-.gitattributes                text eol=lf
-
-# YAML lint inputs: yamllint enforces LF line endings, so keep YAML stable on
-# Windows checkouts even when a contributor has core.autocrlf=true.
-*.yml                         text eol=lf
-*.yaml                        text eol=lf
-
 # Binary overrides: prevent the broad rules above (or any default
 # text-detection) from treating these common binary file types as text.
 # The `binary` macro expands to `-text -diff`.
