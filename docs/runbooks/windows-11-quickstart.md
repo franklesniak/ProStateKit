@@ -238,13 +238,13 @@ Runtime review checklist:
 7. Extract the bundle ZIP into the staged bundle root:
 
    ```powershell
-   Expand-Archive -Path .\dist\ProStateKit-0.1.0.zip -DestinationPath .\dist\ProStateKit -Force
+   Expand-Archive -Path .\dist\ProStateKit-0.1.0.zip -DestinationPath .\dist\ProStateKit-0.1.0 -Force
    ```
 
 8. Validate the staged bundle:
 
    ```powershell
-   $StagedBundleRoot = '.\dist\ProStateKit'
+   $StagedBundleRoot = '.\dist\ProStateKit-0.1.0'
    Push-Location -LiteralPath $StagedBundleRoot
    try {
        & '.\tools\Test-Bundle.ps1' -BundleRoot '.'
