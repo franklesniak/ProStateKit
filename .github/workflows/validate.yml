@@ -34,6 +34,7 @@ jobs:
         with:
           python-version: "3.x"
           cache: pip
+          cache-dependency-path: .pre-commit-config.yaml
 
       - name: Install PowerShell validation modules
         shell: pwsh

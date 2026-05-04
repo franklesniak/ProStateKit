@@ -11,7 +11,7 @@
 
 ## General Checklist
 
-- [ ] I have read the [contributing guidelines](../blob/HEAD/CONTRIBUTING.md)
+- [ ] I have read the [contributing guidelines](https://github.com/franklesniak/ProStateKit/blob/HEAD/CONTRIBUTING.md)
 - [ ] My changes follow `.github/copilot-instructions.md` and applicable `.github/instructions/*`
 - [ ] I have added or updated tests where appropriate
 - [ ] I have updated docs for user-facing behavior changes

@@ -109,7 +109,8 @@ if ($manifest.runtime.expectedHash -ne 'TBD' -and $runtimeHash -ne $manifest.run
 }
 
 if ($manifest.dscVersion -ne 'TBD') {
-    $versionOutput = & $runtimePath --version 2>$null
+    $versionOutput = & $runtimePath --version 2>&1 |
+        Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] }
     if ($LASTEXITCODE -ne 0) {
         throw [System.InvalidOperationException]::new('Runtime version check failed.')
     }
@@ -162,6 +163,7 @@ $requiredFiles = @(
     'docs/resource-gaps.md',
     'docs/runbooks/demo-runbook.md',
     'docs/runbooks/reset-lab.md',
+    'docs/runbooks/windows-11-quickstart.md',
     'docs/runtime-distribution.md',
     'docs/secrets.md',
     'docs/troubleshooting.md',

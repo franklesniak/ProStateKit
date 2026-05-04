@@ -52,7 +52,8 @@ function Resolve-ProStateKitRuntime {
     }
 
     $version = 'TBD'
-    $versionOutput = & $candidatePath --version 2>$null
+    $versionOutput = & $candidatePath --version 2>&1 |
+        Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] }
     if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($versionOutput)) {
         $version = ([string] $versionOutput).Trim()
     }
