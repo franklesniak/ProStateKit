@@ -87,6 +87,8 @@ Expected preview result: non-zero exit with a report of missing runtime, dry rel
 
 ## Getting Started
 
+For a brand-new Windows 11 VM, use [docs/runbooks/windows-11-quickstart.md](docs/runbooks/windows-11-quickstart.md). It separates the source-validation checkpoint from the live DSC runtime checkpoint, because this preview intentionally fails closed until a reviewed pinned runtime exists.
+
 1. Install Node.js 20 or newer.
 2. Run `npm install`.
 3. Install `pre-commit` with your normal global or isolated tooling.

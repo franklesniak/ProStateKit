@@ -163,6 +163,7 @@ $requiredFiles = @(
     'docs/resource-gaps.md',
     'docs/runbooks/demo-runbook.md',
     'docs/runbooks/reset-lab.md',
+    'docs/runbooks/windows-11-quickstart.md',
     'docs/runtime-distribution.md',
     'docs/secrets.md',
     'docs/troubleshooting.md',
