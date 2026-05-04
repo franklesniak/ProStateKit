@@ -83,7 +83,7 @@ The Git-layer rule defined here is necessary but not sufficient for byte-exact s
 - Tools that **compare** fixtures **SHOULD** read bytes in a mode that does not perform its own newline translation (for example, binary mode) when the comparison is byte-exact.
 - Hashing and signing tools **SHOULD** operate on raw bytes and **MUST NOT** depend on on-disk text normalization.
 
-These language-specific concerns are out of scope for this instructions file; they are addressed in the relevant language instructions (for example, `python.instructions.md`, `powershell.instructions.md`). The Git-layer rule and the producer/consumer rules are complementary: each alone is insufficient, and both are needed for stable byte-exact artifacts across platforms.
+These language-specific concerns are out of scope for this instructions file; they are addressed in the relevant language instructions (for example, `powershell.instructions.md`). The Git-layer rule and the producer/consumer rules are complementary: each alone is insufficient, and both are needed for stable byte-exact artifacts across platforms.
 
 ## Rationale
 
