@@ -15,6 +15,7 @@ function Get-ProStateKitTestFakeRuntimePublishDirectory {
     }
 
     $dotnet = Get-Command -Name 'dotnet' -CommandType Application -ErrorAction Stop
+    $dotnetPath = [string] $dotnet.Source
     $cacheRoot = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ('prostatekit-fake-runtime-{0}' -f $PID)
     $sourceRoot = Join-Path -Path $cacheRoot -ChildPath 'src'
     $publishRoot = Join-Path -Path $cacheRoot -ChildPath 'publish'
@@ -25,35 +26,32 @@ function Get-ProStateKitTestFakeRuntimePublishDirectory {
 using System;
 using System.IO;
 
-internal static class Program
+class Program
 {
-    private const string CompliantUnchanged = "{\"resources\":[{\"name\":\"Fake resource\",\"type\":\"ProStateKit/Fake\",\"succeeded\":true,\"changed\":false,\"error\":null,\"rebootRequired\":false}]}";
-    private const string CompliantChanged = "{\"resources\":[{\"name\":\"Fake resource\",\"type\":\"ProStateKit/Fake\",\"succeeded\":true,\"changed\":true,\"error\":null,\"rebootRequired\":false}]}";
-    private const string DriftDetected = "{\"resources\":[{\"name\":\"Fake resource\",\"type\":\"ProStateKit/Fake\",\"succeeded\":false,\"changed\":false,\"error\":\"Synthetic drift fixture\",\"rebootRequired\":false}]}";
-
-    private static int Main(string[] args)
+    static int Main(string[] args)
     {
-        if (args.Length > 0 && string.Equals(args[0], "--version", StringComparison.Ordinal))
+        if (args.Length > 0 && args[0] == "--version")
         {
             Console.WriteLine("3.2.0-test");
             return 0;
         }
 
-        string? markerPath = Environment.GetEnvironmentVariable("PROSTATEKIT_TEST_FAKE_DSC_MARKER");
+        string markerPath = Environment.GetEnvironmentVariable("PROSTATEKIT_TEST_FAKE_DSC_MARKER");
         if (string.IsNullOrEmpty(markerPath))
         {
             return 0;
         }
 
-        bool isSet = args.Length > 1 && string.Equals(args[1], "set", StringComparison.Ordinal);
-        if (isSet)
+        if (args.Length > 1 && args[1] == "set")
         {
             File.WriteAllText(markerPath, "present\n");
-            Console.WriteLine(CompliantChanged);
+            Console.WriteLine("{\"resources\":[{\"name\":\"Fake resource\",\"type\":\"ProStateKit/Fake\",\"succeeded\":true,\"changed\":true,\"error\":null,\"rebootRequired\":false}]}");
             return 0;
         }
 
-        Console.WriteLine(File.Exists(markerPath) ? CompliantUnchanged : DriftDetected);
+        Console.WriteLine(File.Exists(markerPath)
+            ? "{\"resources\":[{\"name\":\"Fake resource\",\"type\":\"ProStateKit/Fake\",\"succeeded\":true,\"changed\":false,\"error\":null,\"rebootRequired\":false}]}"
+            : "{\"resources\":[{\"name\":\"Fake resource\",\"type\":\"ProStateKit/Fake\",\"succeeded\":false,\"changed\":false,\"error\":\"Synthetic drift fixture\",\"rebootRequired\":false}]}");
         return 0;
     }
 }
@@ -65,16 +63,36 @@ internal static class Program
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>dsc</AssemblyName>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
+    <UseAppHost>true</UseAppHost>
   </PropertyGroup>
 </Project>
 '@
 
-    $publishOutput = & $dotnet.Source publish $sourceRoot --configuration Release --output $publishRoot --nologo --verbosity quiet 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        throw [System.InvalidOperationException]::new(('Failed to build fake DSC runtime test binary: {0}' -f ($publishOutput -join "`n")))
+    $publishOutput = & $dotnetPath publish $sourceRoot --configuration Release --output $publishRoot --nologo --verbosity minimal 2>&1
+    $publishExitCode = $LASTEXITCODE
+    $publishOutputText = ($publishOutput | ForEach-Object -Process { [string] $_ }) -join "`n"
+    if ($publishExitCode -ne 0) {
+        throw [System.InvalidOperationException]::new(('dotnet publish failed (exit {0}): {1}' -f $publishExitCode, $publishOutputText))
+    }
+
+    $expectedExeName = 'dsc'
+    if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
+        $expectedExeName = 'dsc.exe'
+    }
+    $expectedExePath = Join-Path -Path $publishRoot -ChildPath $expectedExeName
+    if (-not (Test-Path -LiteralPath $expectedExePath -PathType Leaf)) {
+        $publishedListing = (Get-ChildItem -LiteralPath $publishRoot -File -ErrorAction SilentlyContinue | ForEach-Object -Process { $_.Name }) -join ', '
+        throw [System.IO.FileNotFoundException]::new(('Expected published binary at {0} but it was not produced. Publish dir contained: [{1}]. Publish output: {2}' -f $expectedExePath, $publishedListing, $publishOutputText), $expectedExePath)
+    }
+
+    $sanityOutput = & $expectedExePath --version 2>&1
+    $sanityExitCode = $LASTEXITCODE
+    $sanityOutputText = ([string] $sanityOutput).Trim()
+    if ($sanityExitCode -ne 0 -or $sanityOutputText -ne '3.2.0-test') {
+        throw [System.InvalidOperationException]::new(('Fake DSC runtime sanity check failed (exit {0}): expected "3.2.0-test", got "{1}"' -f $sanityExitCode, $sanityOutputText))
     }
 
     $script:fakeRuntimePublishDir = $publishRoot
