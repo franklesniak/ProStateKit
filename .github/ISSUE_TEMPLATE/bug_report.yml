@@ -7,8 +7,10 @@ labels:
 body:
   - type: markdown
     attributes:
-      value: |
-        Do not paste secrets, tenant identifiers, customer data, private logs, unredacted transcripts, full evidence bundles, or security vulnerabilities into this form.
+      value: >
+        Do not paste secrets, tenant identifiers, customer data, private logs,
+        unredacted transcripts, full evidence bundles, or security
+        vulnerabilities into this form.
 
   - type: checkboxes
     id: pre_flight
