@@ -1,74 +1,262 @@
 <!-- markdownlint-disable MD013 -->
-# Repository Copilot Instructions
+# Repository Copilot Instructions (Repo-Wide Constitution)
 
-**Version:** 2.0.20260503.0
+**Version:** 1.4.20260503.2
 
 ## Metadata
 
 - **Status:** Active
 - **Owner:** Repository Maintainers
 - **Last Updated:** 2026-05-03
-- **Scope:** Repo-wide constitution for ProStateKit contributors and AI coding agents.
-- **Related:** [PowerShell Instructions](instructions/powershell.instructions.md), [Documentation Instructions](instructions/docs.instructions.md), [JSON Instructions](instructions/json.instructions.md), [YAML Instructions](instructions/yaml.instructions.md)
+- **Scope:** Repo-wide canonical instructions ("constitution") that govern all changes in this repository. This file is the authoritative source of truth for repository rules; all language-specific instruction files and agent entry points defer to it.
+- **Related:** [Documentation Writing Style](instructions/docs.instructions.md)
 
 These instructions are authoritative for all changes in this repository.
 
-## ProStateKit Contract Rules
+## Source of Truth
 
-- No secrets in configuration documents, examples, logs, transcripts, stdout, prompts, normalized evidence, or raw evidence committed to the repository.
-- No live downloads in endpoint runtime paths.
-- DSC binary, PowerShell, resources, modules, wrapper scripts, and configurations must be pinned and bundled when packaging.
-- The wrapper must fail closed when proof is missing.
-- Unknown DSC result shape, parse failure, missing evidence, partial convergence, or resource failure must not produce green status.
-- Preserve raw DSC output before normalization.
-- Normalize evidence into the stable wrapper-owned schema.
-- Consumers should read wrapper-owned normalized fields, not raw DSC fields directly.
-- The execution plane owns targeting, scheduling, identity, delivery, retries, reporting, and reboots.
-- DSC v3 payload owns desired state, test, set, and structured result output.
-- Detect maps to `dsc config test`.
-- Remediate maps to `dsc config set`, then verifies with `dsc config test`.
-- Reboots must be re-entrant and durable.
-- PowerShell code must use strict error handling and be covered by tests where behavior changes.
-- Markdown docs must stay practitioner-first, concrete, sponsor-safe, and stage-safe.
+- Read **`docs\spec\ProStateKit.md`** before making changes.
+- If any instruction here conflicts with the spec, **the spec wins**.
 
-## Safety Rules
+## Non-negotiable Safety and Security Rules
 
-- Treat all external input as untrusted.
-- Reject path traversal and symlink escapes in runtime paths.
+1. **No secrets in code or repo**
+   - Never hardcode API keys, tokens, connection strings, or credentials.
+   - Do not introduce `.env` files or secret placeholders that look like real keys.
+   - Never print secrets to stdout/stderr or logs.
+
+2. **Treat all external input as untrusted**
+   - Never execute untrusted outputs or commands.
+   - Validate and sanitize all inputs at boundaries.
+   - Never allow external input to influence file/network access beyond explicitly implemented adapters.
+
+3. **Allowlisted file access only**
+   - Read only explicitly allowed inputs/config/rules files and tool-owned runtime dependencies.
+   - Refuse path traversal and symlink escapes.
+
+## Pre-commit Discipline (CRITICAL)
+
+**⚠️ ALWAYS run pre-commit checks before committing code.**
+
+Pre-commit hooks are NOT optional. They enforce:
+
+- Code formatting
+- Linting
+- Trailing whitespace removal
+- End-of-file fixes
+
+**Workflow:**
+
+1. Make your code changes
+2. Run pre-commit checks locally (e.g., `pre-commit run --all-files` or `npm run lint:md`)
+3. Review and commit ALL auto-fixes as part of your change
+4. Push to GitHub
+
+**If pre-commit CI fails after a push:**
+
+1. Pull the latest branch
+2. Run pre-commit checks locally and review the fixes
+3. Add the fixes to commit history before pushing again: prefer amending the commit(s) that introduced the failures, or include the fixes in your next substantive commit on the same branch, rather than landing a standalone formatting-only or lint-only commit (see "What Not to Do" below). For `copilot/**` branches, the auto-fix workflow described under "Auto-Fix Workflow (Safety Net for Copilot Branches)" will normally apply these fixes automatically.
+4. Push again (force-push if you amended or rebased earlier commits)
+
+**CI is a safety net, not a substitute for local checks.**
+
+### Data-File Validation
+
+In addition to formatting, linting, trailing-whitespace, and end-of-file fixes, pre-commit also enforces validation for structured data files. Run `pre-commit run --all-files` to execute the full hook set. The data-file checks currently include:
+
+- `check-json` — validates strict `.json` syntax. **Note:** `check-json` does **not** validate `.jsonc`; JSONC (JSON with comments) is allowed only when supported by the consuming tool, and stricter enforcement requires JSONC-aware tooling.
+- `check-yaml` — parse-checks `.yml` / `.yaml` files.
+- `yamllint` — enforces YAML style per `.yamllint.yml`.
+- `actionlint` — lints GitHub Actions workflow files.
+- `check-jsonschema` — JSON Schema validation. Validates: (a) the worked-example schema's valid example data under `schemas/examples/example-config/valid/` against `schemas/example-config.schema.json`; (b) selected real load-bearing repository configuration files (for example, `.github/dependabot.yml`) against built-in vendor schemas shipped with `check-jsonschema`; and (c) any future project-owned schema-backed file families that downstream maintainers wire up in `.pre-commit-config.yaml`.
+- `check-metaschema` — self-validates project-owned schemas (currently `schemas/example-config.schema.json`) against their declared JSON Schema metaschema, where configured in `.pre-commit-config.yaml`.
+
+`.pre-commit-config.yaml` is the authoritative list of active hooks. Do **not** rely on a hardcoded total hook count when describing the validation model; consult `.pre-commit-config.yaml` directly to see which hooks are wired up.
+
+Prettier is **opt-in** and is **not** part of the default data-file toolchain. (This framing has been re-verified against the built-in schema validation ADR and remains correct.)
+
+> **Schema example tests.** The dedicated [`.github/workflows/data-ci.yml`](workflows/data-ci.yml) workflow re-runs the data-file hooks (`check-json`, `check-yaml`, `yamllint`, `actionlint`, `check-jsonschema`, `check-metaschema`) so JSON/YAML/Actions enforcement can be made a required check via branch protection. See [`schemas/README.md`](../schemas/README.md) for the worked example, the canonical downstream removal checklist, and future-work candidates. Downstream repositories MAY add additional `check-jsonschema` hook entries for their own schema-backed file families.
+>
+> **When schema contracts change**, agents updating any schema **MUST** keep the following in sync in the same change:
+>
+> - The schema file under `schemas/<name>.schema.json`.
+> - Valid example fixtures under `schemas/examples/<name>/valid/`.
+> - Invalid example fixtures under `schemas/examples/<name>/invalid/`.
+> - The pre-commit hook scope in `.pre-commit-config.yaml`.
+> - `.github/workflows/data-ci.yml` only when **adding or removing a hook ID** (for example, introducing a new `check-yaml-custom` hook), or when adding, removing, or renaming an explicit CI step or hook alias that the workflow invokes by name. Changes to an **existing** hook's `files:` regex (including `check-jsonschema` scope changes) are picked up automatically, because each `data-ci.yml` step invokes hooks by ID via `pre-commit run <hook-id> --all-files`.
+> - Any documentation that references the schema or the validation policy (for example, `schemas/README.md`, `README.md`, `CONTRIBUTING.md`, and `OPTIONAL_CONFIGURATIONS.md`).
+
+### For GitHub Copilot Coding Agent (Automated PRs)
+
+**⚠️ CRITICAL: You are an automated agent creating PRs. You MUST follow this workflow:**
+
+When creating automated PRs, you **MUST**:
+
+1. Run all linting/formatting checks as the **FINAL step** before each commit
+2. Include **ALL** auto-fixes in the **SAME commit** with your code changes
+3. **NEVER** push code that will fail pre-commit CI
+4. If pre-commit fails, fix issues and re-run until all checks pass
+
+**The pre-commit step is NON-NEGOTIABLE for automated PRs.**
+
+If you encounter issues:
+
+- Do NOT create a separate "fix formatting" commit
+- Do NOT push and wait for CI to fail
+- Fix locally, include in your commit, then push
+
+**Failure to follow this will cause CI failures and require manual intervention.**
+
+### Auto-Fix Workflow (Safety Net for Copilot Branches)
+
+This repository includes an auto-fix workflow (`.github/workflows/auto-fix-precommit.yml`) that automatically runs pre-commit hooks and commits fixes for `copilot/**` branches. This serves as a safety net when the Copilot Coding Agent pushes code that fails pre-commit checks.
+
+**How it works:**
+
+- Triggers only on `push` events to `copilot/**` branches
+- Only runs when the pusher is `copilot-swe-agent[bot]` (prevents infinite loops)
+- Automatically commits any auto-fixes with message `chore: Apply pre-commit auto-fixes [automated]`
+- Uses `github-actions[bot]` identity for commits
+
+**Important notes:**
+
+- This is a **safety net**, not a substitute for running pre-commit locally
+- Agents should still try to run pre-commit checks before pushing when possible
+- The workflow only applies to `copilot/**` branches—human branches are not affected
+- Manual intervention may still be required for issues that cannot be auto-fixed
+
+## Repository Self-Containment
+
+All files committed to this repository MUST be interpretable—meaning understandable to a reader without access to private or internal resources—using only the contents of this repository and public references that are clearly linked from it.
+
+This rule governs the meaning of documentation, code comments, and embedded references. It does not require the repository to build or run without standard external dependencies declared in its manifests (for example, package, module, or action dependencies pinned in `requirements.txt`, `package.json`, or workflow `uses:` entries).
+
+It applies to, but is not limited to:
+
+- `README.md` and other top-level `*.md` files.
+- Files under `.github/`, including workflows, instructions, and design-decision docs.
+- Code comments embedded in committed files.
+
+Do not embed references to:
+
+- Work stream identifiers, sprint names, milestone labels, or phase numbers that are not defined inside this repository.
+- Ticket, issue, or project IDs that resolve only inside a private or external tracker.
+- Internal team, person, or communication-channel names.
+- Roadmap, design, or planning documents that are not published in this repository or otherwise publicly resolvable from links in this repository.
+
+Where a future-extension hook needs to be described, phrase the condition in repository-observable terms. For example, prefer "Once concrete schemas are added under `schemas/` and a `check-jsonschema` hook is enabled in `.pre-commit-config.yaml`, ..." rather than referencing the work stream that will introduce those changes.
+
+If a needed reference cannot be expressed in repository-observable terms, follow the existing **What Not to Do** guidance and open an issue or add an explicit "Open Question" in the affected file instead of inventing or importing an external reference.
+
+## Determinism and Correctness Rules
+
+- Prefer deterministic tooling over manual rewriting.
+- Sanitation pipelines must be bounded (iteration caps, no-progress detection).
+- Preserve formatting, indentation, and ordering when processing structured content.
+- Concurrency is allowed, but outputs must be deterministic.
+
+## How to Work (Definition of Done)
+
+For each PR-sized change:
+
+- **Run pre-commit checks locally and fix all issues before committing.**
+  - Pre-commit hooks will auto-fix many issues (formatting, linting, whitespace).
+  - Always review and commit these auto-fixes as part of your change.
+- Add/adjust tests for new behavior.
+  - PowerShell: Pester tests in `tests/PowerShell/`
+- For data-file changes (JSON, JSONC, YAML, YAML-based GitHub Actions workflows), run the applicable validation hooks via `pre-commit run --all-files` so that `check-json`, `check-yaml`, `yamllint`, `actionlint`, and (where configured) `check-jsonschema` all pass before committing.
+- Keep changes small and reviewable; avoid "big bang" refactors.
+- Update docs/spec only if behavior is intentionally changed (and note why).
+- Ensure:
+  - unit tests pass
+  - linters/formatters pass
+  - no secrets appear in logs, artifacts, or test fixtures
+
+## What Not to Do
+
+- Do not add any feature that executes scripts or commands generated by untrusted sources.
 - Do not add telemetry or external logging services without explicit approval.
-- Do not weaken security constraints to make a test pass.
-- Do not invent a pinned DSC version, hash, source commit, timestamp, tenant value, account name, or machine name.
-- Mark unimplemented behavior with `TODO:` and make the execution path fail non-zero.
+- Do not weaken security constraints to "make it work."
+- Do not add new major dependencies without clear justification in the PR description.
+- Do not implement "Copilot agent fixes" or rely on non-public APIs for lint correction.
+- Do not silently invent behavior when specs or requirements are ambiguous—open an issue or add an explicit "Open Question" instead.
+- Do not create separate "fix formatting" or "fix linting" commits—include all auto-fixes in the same commit as your changes.
 
-## Validation
+## Modular Instructions
 
-Run applicable checks before committing:
+This repository uses modular instruction files covering both language-specific standards and cross-cutting repository rules:
+
+| Scope | Instruction File | Applies To |
+| --- | --- | --- |
+| Git attributes | `.github/instructions/gitattributes.instructions.md` | `**/.gitattributes` |
+| JSON | `.github/instructions/json.instructions.md` | `**/*.json`, `**/*.jsonc` |
+| Markdown/Docs | `.github/instructions/docs.instructions.md` | `**/*.md` |
+| PowerShell | `.github/instructions/powershell.instructions.md` | `**/*.ps1` |
+| YAML | `.github/instructions/yaml.instructions.md` | `**/*.yml`, `**/*.yaml` |
+
+**Note:** The PowerShell instructions include comprehensive guidance on Pester testing.
+
+**To customize for your project:**
+
+- Remove instruction files for scopes you don't use
+- Add new instruction files for additional languages or cross-cutting rules as needed
+- Update this table to reflect the instruction files present in your project
+
+## Agent Instruction Files
+
+This repository includes agent instruction files at the repository root to support multi-platform AI coding agents:
+
+| File | Target Agent(s) |
+| --- | --- |
+| `CLAUDE.md` | Claude Code, GitHub Copilot coding agent |
+| `AGENTS.md` | OpenAI Codex CLI, GitHub Copilot coding agent |
+| `GEMINI.md` | Gemini Code Assist, GitHub Copilot coding agent |
+
+`.github/copilot-instructions.md` remains the **canonical source of truth** for all repository rules. The root agent instruction files are thin entry points: each keeps a minimal inline summary of the highest-priority shared rules for reliability and may add platform-specific guidance that does not conflict with this file.
+
+When modifying high-priority shared guidance in `.github/copilot-instructions.md` (for example, canonical file location, safety rules, pre-commit expectations, validation commands, or language-instruction references), update the minimal summaries in any remaining agent files as needed. Avoid copying large shared sections into the entry point files.
+
+**To customize for your project:**
+
+- Remove agent files for platforms you do not use
+- Keep the remaining agent files limited to minimal inline summaries plus any necessary platform-specific guidance
+
+## Linting Configurations
+
+This repository includes linting tool configurations that align with the coding standards:
+
+| Tool | Configuration File | Purpose |
+| --- | --- | --- |
+| PSScriptAnalyzer | `.github/linting/PSScriptAnalyzerSettings.psd1` | PowerShell formatting/linting (OTBS style) |
+| markdownlint | `.markdownlint.jsonc` | Markdown linting |
+
+### Running Linters
+
+**Markdown:**
 
 ```bash
 npm run lint:md
-pre-commit run --all-files
 ```
 
-Run PowerShell tests with:
+**PowerShell:**
+
+```powershell
+Invoke-ScriptAnalyzer -Path .\script.ps1 -Settings .\.github\linting\PSScriptAnalyzerSettings.psd1
+```
+
+## Testing Tools
+
+This repository includes testing infrastructure for PowerShell:
+
+| Language | Framework | Configuration | Test Location |
+| --- | --- | --- | --- |
+| PowerShell | Pester 5.x | Inline in `.github/workflows/powershell-ci.yml` | `tests/PowerShell/` |
+
+### Running Tests
+
+**PowerShell:**
 
 ```powershell
 Invoke-Pester -Path tests/ -Output Detailed
 ```
-
-Pre-commit auto-fixes must be included with the related change. Do not create separate formatting-only or lint-only commits.
-
-## Modular Instructions
-
-Read the relevant file before changing matching files:
-
-| Scope | Instruction File |
-| --- | --- |
-| Markdown | `instructions/docs.instructions.md` |
-| PowerShell | `instructions/powershell.instructions.md` |
-| JSON | `instructions/json.instructions.md` |
-| YAML | `instructions/yaml.instructions.md` |
-| Git attributes | `instructions/gitattributes.instructions.md` |
-
-## Definition Of Done
-
-A change is not done until tests and validation gates that cover the changed behavior pass, docs are updated for user-facing behavior, schemas and examples remain synchronized, and no committed artifact contains sensitive data.

@@ -1,41 +1,58 @@
 <!-- markdownlint-disable MD013 -->
-# Agent Instructions For OpenAI Codex CLI
+# Agent Instructions for OpenAI Codex CLI
 
-**Version:** 2.0.20260503.0
+**Version:** 1.3.20260503.2
 
 ## Metadata
 
 - **Status:** Active
 - **Owner:** Repository Maintainers
 - **Last Updated:** 2026-05-03
-- **Scope:** Minimal entry point for Codex and compatible AI coding agents operating in ProStateKit.
-- **Related:** [Repository Instructions](.github/copilot-instructions.md), [PowerShell Instructions](.github/instructions/powershell.instructions.md), [Documentation Instructions](.github/instructions/docs.instructions.md)
+- **Scope:** Agent-specific entry point for OpenAI Codex CLI and compatible AI coding agents operating in this repository. Mirrors a minimal inline summary of the highest-priority shared rules; `.github/copilot-instructions.md` remains the canonical source of truth.
+- **Related:** [Repository Copilot Instructions](.github/copilot-instructions.md), [Documentation Writing Style](.github/instructions/docs.instructions.md)
 
-Read [.github/copilot-instructions.md](.github/copilot-instructions.md) before making changes. It is the authoritative repository constitution.
+This file provides project-specific instructions for OpenAI Codex CLI and compatible AI coding agents operating in this repository. These instructions ensure that agents follow the same coding standards, safety rules, and workflows that apply to all contributors.
 
-## Essential Rules
+## Canonical Instructions
 
-- No secrets in configs, examples, logs, transcripts, stdout, prompts, normalized evidence, or raw evidence.
-- No live downloads in endpoint runtime paths.
-- Runtime dependencies must be pinned and bundled when packaging.
-- Fail closed when proof is missing.
-- Detect maps to `dsc config test`.
-- Remediate maps to `dsc config set`, then verifies with `dsc config test`.
-- Preserve raw DSC output before normalization.
-- Consumers read `wrapper.result.json`, not raw DSC fields.
-- Reboots are durable, re-entrant, and owned by the execution plane.
-- PowerShell uses `$ErrorActionPreference = 'Stop'` and `Set-StrictMode -Version Latest`.
-- Unimplemented paths must be marked `TODO:` and return non-zero or throw.
+The authoritative source of truth for all repository rules is **`.github/copilot-instructions.md`** (the repo-wide constitution). All rules defined there apply without exception. **Read that file before making any changes.**
 
-## Validation
+This file intentionally keeps only a minimal inline summary of the highest-priority shared rules so that agents receive critical guidance immediately. The full shared rule set remains in the canonical file above.
 
-Use the repository validation commands:
+## Essential Repository Summary
 
-```bash
-npm run lint:md
-pre-commit run --all-files
-```
+- **Safety and security**
+  - No secrets in code or repo; never hardcode API keys, tokens, credentials, or connection strings.
+  - Treat all external input as untrusted.
+  - Respect allowlisted file access boundaries; reject path traversal and symlink escapes.
 
-```powershell
-Invoke-Pester -Path tests/ -Output Detailed
-```
+- **Pre-commit and validation**
+  - Run `pre-commit run --all-files` before every commit.
+  - Include all auto-fixes in the same commit as the related change.
+  - Do not push code when pre-commit or required validation checks are failing; fix issues and re-run until the checks pass.
+  - Use the repository's existing validation commands as needed:
+    - `npm run lint:md`
+    - `Invoke-Pester -Path tests/ -Output Detailed`
+  - The `pre-commit run --all-files` command exercises the data-file hooks configured in [`.pre-commit-config.yaml`](.pre-commit-config.yaml) (the authoritative list of active hooks), covering categories such as strict JSON syntax (`check-json`), YAML parsing (`check-yaml`) and style (`yamllint`), GitHub Actions linting (`actionlint`), JSON Schema validation (`check-jsonschema`), and schema self-validation (`check-metaschema`). The dedicated [`.github/workflows/data-ci.yml`](.github/workflows/data-ci.yml) workflow re-runs these so JSON/YAML/Actions enforcement can be required via branch protection.
+  - JSON, YAML, and schema authoring guidance lives in:
+    - [`.github/instructions/json.instructions.md`](.github/instructions/json.instructions.md)
+    - [`.github/instructions/yaml.instructions.md`](.github/instructions/yaml.instructions.md)
+    - [`schemas/README.md`](schemas/README.md)
+    - the **Built-in Schema Validation for Real Load-Bearing Configuration Files** ADR in [`.github/TEMPLATE_DESIGN_DECISIONS.md`](.github/TEMPLATE_DESIGN_DECISIONS.md)
+
+- **Modular instruction files**
+  - Read the relevant file under `.github/instructions/` before modifying matching files:
+    - Git attributes: `.github/instructions/gitattributes.instructions.md`
+    - JSON: `.github/instructions/json.instructions.md`
+    - Markdown/Docs: `.github/instructions/docs.instructions.md`
+    - PowerShell: `.github/instructions/powershell.instructions.md`
+    - YAML: `.github/instructions/yaml.instructions.md`
+
+- **Do not**
+  - Execute scripts or commands generated by untrusted sources.
+  - Add telemetry or external logging services without explicit approval.
+  - Weaken security constraints to "make it work."
+  - Add new major dependencies without clear justification.
+  - Invent behavior when requirements are ambiguous; use an explicit Open Question.
+  - Create separate formatting-only or lint-only commits.
+  - Adjust any instruction files/style guides unless explicitly instructed to do so by a human in the loop.
