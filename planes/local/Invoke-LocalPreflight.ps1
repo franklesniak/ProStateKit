@@ -11,6 +11,8 @@ param(
 
     [string] $EvidenceRoot = 'C:\ProgramData\ProStateKit\Evidence',
 
+    [string] $OperationId,
+
     [string] $DemoMarkerPath = 'C:\ProgramData\ProStateKit\Baseline\baseline-applied.txt',
 
     [switch] $AllowLabLatest
@@ -26,6 +28,7 @@ $entryPoint = Join-Path -Path $BundleRoot -ChildPath 'src/Invoke-ProStateKit.ps1
     -ConfigPath $ConfigPath `
     -RuntimeMode $RuntimeMode `
     -EvidenceRoot $EvidenceRoot `
+    -OperationId $OperationId `
     -DemoMarkerPath $DemoMarkerPath `
     -BundleRoot $BundleRoot `
     -AllowLabLatest:$AllowLabLatest.IsPresent

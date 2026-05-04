@@ -94,11 +94,12 @@ function Write-ProStateKitPreflightReport {
     Set-Content -LiteralPath (Join-Path -Path $ReportRoot -ChildPath 'summary.txt') -Value $summary -Encoding utf8
 }
 
-$bundleRootFull = [System.IO.Path]::GetFullPath($BundleRoot)
+$bundleRootFull = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($BundleRoot)
 $configPathFull = $ConfigPath
 if (-not [System.IO.Path]::IsPathRooted($configPathFull)) {
-    $configPathFull = [System.IO.Path]::GetFullPath((Join-Path -Path $bundleRootFull -ChildPath $ConfigPath))
+    $configPathFull = Join-Path -Path $bundleRootFull -ChildPath $ConfigPath
 }
+$configPathFull = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($configPathFull)
 
 if ([string]::IsNullOrWhiteSpace($OperationId)) {
     $nowUtc = [datetime]::UtcNow

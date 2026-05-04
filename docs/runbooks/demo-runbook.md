@@ -5,7 +5,7 @@
 
 - **Status:** Draft
 - **Owner:** Repository Maintainers
-- **Last Updated:** 2026-05-03
+- **Last Updated:** 2026-05-04
 - **Scope:** Reproducible demo path for ProStateKit. Commands are preview-stage and fail closed until pinned DSC runtime integration is completed.
 - **Related:** [Contract](../contract.md), [Troubleshooting](../troubleshooting.md), [Packaging](../packaging.md)
 
@@ -14,6 +14,7 @@
 - Windows lab endpoint with permission to test DSC v3 resources.
 - ProStateKit checkout or built bundle.
 - Node.js 20 or later for `ValidateBundle` / `Preflight` YAML parsing in the preview toolchain.
+- A bundle built after `npm install`, so the selected `js-yaml` parser dependency is packaged under `node_modules/`.
 - Pinned `dsc.exe` version: TBD.
 - Pinned resource modules: TBD.
 
@@ -24,6 +25,8 @@ pwsh -File .\tools\Build-Bundle.ps1
 ```
 
 Expected preview result without a pinned runtime: non-zero failure stating that the pinned DSC runtime is required, with no partial release artifact.
+
+If the build fails with a missing Node.js parser dependency, run `npm install` from the repository checkout and rerun `Build-Bundle.ps1`. Do not run `npm install` from the extracted lab bundle.
 
 ## Local Install Or Extraction
 

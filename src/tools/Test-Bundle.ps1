@@ -48,7 +48,10 @@ function Test-ProStateKitJsonDocument {
 function Test-ProStateKitYamlDocument {
     param(
         [Parameter(Mandatory)]
-        [string] $Path
+        [string] $Path,
+
+        [Parameter(Mandatory)]
+        [string] $YamlModulePath
     )
 
     if (-not (Get-Command -Name 'node' -CommandType Application -ErrorAction SilentlyContinue)) {
@@ -57,11 +60,11 @@ function Test-ProStateKitYamlDocument {
 
     $nodeScript = @'
 const fs = require('fs');
-const yaml = require('js-yaml');
-const path = process.argv[1];
+const yaml = require(process.argv[1]);
+const path = process.argv[2];
 yaml.load(fs.readFileSync(path, 'utf8'), { filename: path });
 '@
-    & node -e $nodeScript $Path
+    & node -e $nodeScript $YamlModulePath $Path
     if ($LASTEXITCODE -ne 0) {
         throw [System.FormatException]::new('YAML parse failed: {0}' -f $Path)
     }
@@ -167,6 +170,8 @@ $requiredFiles = @(
     'docs/runtime-distribution.md',
     'docs/secrets.md',
     'docs/troubleshooting.md',
+    'node_modules/argparse/argparse.js',
+    'node_modules/js-yaml/index.js',
     'planes/configmgr/Discover-ProStateKit.ps1',
     'planes/configmgr/Remediate-ProStateKit.ps1',
     'planes/intune/Detect-ProStateKit.ps1',
@@ -268,7 +273,8 @@ foreach ($bundleFile in Get-ChildItem -LiteralPath $bundleRootFull -File -Recurs
 
 $baselineYamlPath = Resolve-ProStateKitBundlePath -RelativePath 'configs/baseline.dsc.yaml' -CurrentBundleRoot $bundleRootFull
 $baselineJsonPath = Resolve-ProStateKitBundlePath -RelativePath 'configs/generated/baseline.dsc.json' -CurrentBundleRoot $bundleRootFull
-Test-ProStateKitYamlDocument -Path $baselineYamlPath
+$yamlModulePath = Resolve-ProStateKitBundlePath -RelativePath 'node_modules/js-yaml/index.js' -CurrentBundleRoot $bundleRootFull
+Test-ProStateKitYamlDocument -Path $baselineYamlPath -YamlModulePath $yamlModulePath
 Test-ProStateKitJsonDocument -Path $baselineJsonPath
 
 $observedWrapperHash = Get-ProStateKitSha256 -Path (Resolve-ProStateKitBundlePath -RelativePath 'src/runner/Runner.ps1' -CurrentBundleRoot $bundleRootFull)

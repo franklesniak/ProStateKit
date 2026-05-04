@@ -150,6 +150,11 @@ $relativePaths = @(
     'tools/Invoke-Validation.ps1'
 )
 
+$nodeRuntimeDependencyRoots = @(
+    'node_modules/argparse',
+    'node_modules/js-yaml'
+)
+
 foreach ($relativePath in $relativePaths) {
     $sourcePath = Join-Path -Path $repositoryRootFull -ChildPath $relativePath
     if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
@@ -159,6 +164,23 @@ foreach ($relativePath in $relativePaths) {
     $destinationPath = Join-Path -Path $stagingRoot -ChildPath $relativePath
     [void] (New-Item -Path (Split-Path -Path $destinationPath -Parent) -ItemType Directory -Force)
     Copy-Item -LiteralPath $sourcePath -Destination $destinationPath -Force
+}
+
+foreach ($relativeDependencyRoot in $nodeRuntimeDependencyRoots) {
+    $sourceDependencyRoot = Join-Path -Path $repositoryRootFull -ChildPath $relativeDependencyRoot
+    if (-not (Test-Path -LiteralPath $sourceDependencyRoot -PathType Container)) {
+        throw [System.IO.DirectoryNotFoundException]::new(
+            ('Required Node.js parser dependency was not found. Run npm install before building the bundle: {0}' -f $sourceDependencyRoot),
+            $sourceDependencyRoot
+        )
+    }
+
+    foreach ($dependencyFile in Get-ChildItem -LiteralPath $sourceDependencyRoot -File -Recurse -Force) {
+        $relativeDependencyPath = [System.IO.Path]::GetRelativePath($repositoryRootFull, $dependencyFile.FullName)
+        $dependencyDestinationPath = Join-Path -Path $stagingRoot -ChildPath $relativeDependencyPath
+        [void] (New-Item -Path (Split-Path -Path $dependencyDestinationPath -Parent) -ItemType Directory -Force)
+        Copy-Item -LiteralPath $dependencyFile.FullName -Destination $dependencyDestinationPath -Force
+    }
 }
 
 $runtimeDestinationRoot = Join-Path -Path $stagingRoot -ChildPath 'runtime/dsc'

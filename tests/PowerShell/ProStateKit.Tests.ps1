@@ -1214,14 +1214,23 @@ exit 0
         $buildScriptPath = Join-Path -Path $script:repoRoot -ChildPath 'src/tools/Build-Bundle.ps1'
         $testBundlePath = Join-Path -Path $script:repoRoot -ChildPath 'src/tools/Test-Bundle.ps1'
         $stagedFiles = Get-AssignedStringArrayForTest -Path $buildScriptPath -VariableName 'relativePaths'
+        $stagedDependencyRoots = Get-AssignedStringArrayForTest -Path $buildScriptPath -VariableName 'nodeRuntimeDependencyRoots'
         $requiredFiles = Get-AssignedStringArrayForTest -Path $testBundlePath -VariableName 'requiredFiles'
 
         $stagedFiles | Should -Not -BeNullOrEmpty
+        $stagedDependencyRoots | Should -Not -BeNullOrEmpty
         $requiredFiles | Should -Not -BeNullOrEmpty
 
         $missingFromVerifier = @($stagedFiles | Where-Object -FilterScript { $requiredFiles -notcontains $_ })
         $missingFromBuilder = @($requiredFiles | Where-Object -FilterScript {
-                $_ -ne 'bundle.manifest.json' -and $stagedFiles -notcontains $_
+                $requiredFile = $_
+                $isGeneratedManifest = $requiredFile -eq 'bundle.manifest.json'
+                $isStagedFile = $stagedFiles -contains $requiredFile
+                $isNodeRuntimeDependency = @($stagedDependencyRoots | Where-Object -FilterScript {
+                        $requiredFile.StartsWith(('{0}/' -f $_), [System.StringComparison]::Ordinal)
+                    }).Count -gt 0
+
+                -not ($isGeneratedManifest -or $isStagedFile -or $isNodeRuntimeDependency)
             })
 
         $missingFromVerifier | Should -BeNullOrEmpty
@@ -1259,6 +1268,8 @@ exit 0
                 'src',
                 'package-lock.json',
                 'package.json',
+                'node_modules/argparse',
+                'node_modules/js-yaml',
                 'tests',
                 'tools'
             )) {
@@ -1294,6 +1305,7 @@ exit 0
                 $zipEntries | Should -Contain '.github/scripts/lint-markdown-links.js'
                 $zipEntries | Should -Contain '.pre-commit-config.yaml'
                 $zipEntries | Should -Contain 'bundle.manifest.json'
+                $zipEntries | Should -Contain 'node_modules/js-yaml/index.js'
                 $zipEntries | Should -Contain 'runtime/dsc/lib/prostatekit-runtime-support.txt'
                 $zipEntries | Should -Contain 'evidence/sample/compliant-detect/wrapper.result.json'
             } finally {
@@ -1321,6 +1333,8 @@ exit 0
             @($manifest.files.path) | Should -Contain 'docs/completion-audit.md'
             @($manifest.files.path) | Should -Contain 'runtime/dsc/README.md'
             @($manifest.files.path) | Should -Contain 'package.json'
+            @($manifest.files.path) | Should -Contain 'node_modules/argparse/argparse.js'
+            @($manifest.files.path) | Should -Contain 'node_modules/js-yaml/index.js'
             @($manifest.files.path) | Should -Contain '.github/scripts/lint-markdown-links.js'
             @($manifest.files.path) | Should -Contain 'tests/PowerShell/ProStateKit.Tests.ps1'
             @($manifest.files.path) | Should -Contain 'evidence/sample/compliant-detect/wrapper.result.json'
@@ -1361,6 +1375,8 @@ exit 0
                     'schemas/examples/wrapper-result.valid.json',
                     'package.json',
                     'package-lock.json',
+                    'node_modules/argparse/argparse.js',
+                    'node_modules/js-yaml/index.js',
                     'tools/New-Package.ps1',
                     'tools/Test-ReleaseReadiness.ps1'
                 )) {
@@ -1370,6 +1386,14 @@ exit 0
             $testBundleScript = Join-Path -Path $bundleRoot -ChildPath 'src/tools/Test-Bundle.ps1'
             & $testBundleScript -BundleRoot $bundleRoot
             $LASTEXITCODE | Should -Be 0
+
+            Push-Location -LiteralPath $bundleRoot
+            try {
+                & '.\src\tools\Test-Bundle.ps1' -BundleRoot '.'
+                $LASTEXITCODE | Should -Be 0
+            } finally {
+                Pop-Location
+            }
         } finally {
         }
     }
@@ -1721,17 +1745,18 @@ exit 0
             $LASTEXITCODE | Should -Be 0
 
             $bundleRoot = Join-Path -Path $script:bundleOutputRoot -ChildPath 'ProStateKit-0.1.0'
-            $entryPoint = Join-Path -Path $bundleRoot -ChildPath 'src/Invoke-ProStateKit.ps1'
-            & $entryPoint `
-                -Mode Preflight `
-                -Plane Local `
-                -ConfigPath 'configs/baseline.dsc.yaml' `
-                -RuntimeMode PinnedBundle `
-                -EvidenceRoot $evidenceRoot `
-                -OperationId $operationId `
-                -DemoMarkerPath $markerPath `
-                -BundleRoot $bundleRoot
-            $LASTEXITCODE | Should -Be 0
+            Push-Location -LiteralPath $bundleRoot
+            try {
+                & '.\planes\local\Invoke-LocalPreflight.ps1' `
+                    -BundleRoot '.' `
+                    -RuntimeMode PinnedBundle `
+                    -EvidenceRoot $evidenceRoot `
+                    -OperationId $operationId `
+                    -DemoMarkerPath $markerPath
+                $LASTEXITCODE | Should -Be 0
+            } finally {
+                Pop-Location
+            }
 
             $reportPath = Join-Path -Path $evidenceRoot -ChildPath (Join-Path -Path 'Preflight' -ChildPath (Join-Path -Path $operationId -ChildPath 'preflight.report.json'))
             $report = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
@@ -3197,6 +3222,7 @@ Describe -Name 'Validation command guardrails' -Fixture {
             ConvertFrom-Json
 
         $package.engines.node | Should -Be '>=20.0.0'
+        $package.dependencies.'js-yaml' | Should -Be '^4.1.1'
         $package.scripts.'lint:md' |
             Should -Be 'markdownlint-cli2 "**/*.md" "#node_modules" "#.pre-commit-cache" "#.npm-cache" "#.pip-cache"'
         $package.scripts.'lint:md:nested' |

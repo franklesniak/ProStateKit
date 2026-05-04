@@ -5,7 +5,7 @@
 
 - **Status:** Draft
 - **Owner:** Repository Maintainers
-- **Last Updated:** 2026-05-03
+- **Last Updated:** 2026-05-04
 - **Scope:** Bundle layout, manifest, checksum, and release posture for ProStateKit.
 - **Related:** [Bundle Manifest Schema](../schemas/bundle-manifest.schema.json), [Contract](contract.md), [Runtime Distribution](runtime-distribution.md)
 
@@ -32,6 +32,8 @@ BaselineBundle/
   evidence/sample/      (synthetic fallback evidence)
   schemas/examples/     (valid and invalid schema fixtures)
   package.json          (Node.js validation tool metadata)
+  package-lock.json     (locked Node.js dependency metadata)
+  node_modules/         (selected parser runtime dependencies only)
   .github/scripts/      (selected Markdown validation helpers only)
   .github/linting/      (PSScriptAnalyzer settings)
   bundle.manifest.json
@@ -47,7 +49,7 @@ Supported delivery patterns to validate include Intune Win32 app, ConfigMgr appl
 
 The Runner MUST fail closed if an expected binary, resource module, config, or manifest entry is missing under `BundleRoot`. Runtime, configuration, and manifest paths must resolve inside `BundleRoot` and must not include symlink or reparse-point components.
 
-`Test-Bundle.ps1` validates manifest schema, safe bundle-relative paths, required files, duplicate manifest paths, untracked bundle files, hashes, runtime version, and packaged config parseability. The preview YAML parser uses the repository Node.js toolchain, so build and preflight environments need Node.js 20 or later until a native PowerShell YAML parser is selected.
+`Test-Bundle.ps1` validates manifest schema, safe bundle-relative paths, required files, duplicate manifest paths, untracked bundle files, hashes, runtime version, and packaged config parseability. The preview YAML parser uses Node.js 20 or later plus the packaged `js-yaml` dependency. `Build-Bundle.ps1` copies only the selected parser runtime dependencies from the repository's `node_modules/`; it fails closed if `npm install` has not populated them before bundle creation.
 
 ## Future Release Workflow
 
