@@ -7,7 +7,7 @@
 - **Owner:** Frank Lesniak
 - **Last Updated:** 2026-05-03
 - **Scope:** Technical specification for ProStateKit, the companion GitHub repository and agentic build workflow for the MMSMOA 2026 session "Cure Script Fatigue: Reliable Endpoint State with DSC v3." This document defines the target repository, wrapper contract, bundle model, evidence model, validation gates, demo runbook outputs, and closed-loop agent workflow. It does not implement the repository.
-- **Related:** [DSCv3-14-deck-spec.md](DSCv3-14-deck-spec.md), [DSCv3-14a-next-steps.md](DSCv3-14a-next-steps.md), [Demo Runbook](docs/runbooks/demo-runbook.md), [Repository Copilot Instructions](.github/copilot-instructions.md), [Documentation Writing Style](.github/instructions/docs.instructions.md)
+- **Related:** [DSCv3-14-deck-spec.md](../../DSCv3-14-deck-spec.md), [DSCv3-14a-next-steps.md](../../DSCv3-14a-next-steps.md), [Demo Runbook](../runbooks/demo-runbook.md), [Repository Copilot Instructions](../../.github/copilot-instructions.md), [Documentation Writing Style](../../.github/instructions/docs.instructions.md)
 
 ## Executive Summary
 

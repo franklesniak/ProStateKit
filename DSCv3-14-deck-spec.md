@@ -7,7 +7,7 @@
 - **Owner:** Frank Lesniak
 - **Last Updated:** 2026-05-03
 - **Scope:** Revised slide-by-slide deck specification for the MMSMOA 2026 session "Cure Script Fatigue: Reliable Endpoint State with DSC v3." This file incorporates prior feedback notes, adds the ProStateKit technical repository narrative, and marks content that depends on the final technical spec, repository implementation, lab validation, or final rehearsal evidence. It does not generate PowerPoint slides.
-- **Related:** [ProStateKit.md](ProStateKit.md), [DSCv3-14a-next-steps.md](DSCv3-14a-next-steps.md), [Demo Runbook](docs/runbooks/demo-runbook.md), [Repository Copilot Instructions](.github/copilot-instructions.md), [Documentation Writing Style](.github/instructions/docs.instructions.md)
+- **Related:** [ProStateKit.md](docs/spec/ProStateKit.md), [DSCv3-14a-next-steps.md](DSCv3-14a-next-steps.md), [Demo Runbook](docs/runbooks/demo-runbook.md), [Repository Copilot Instructions](.github/copilot-instructions.md), [Documentation Writing Style](.github/instructions/docs.instructions.md)
 
 ## Change Summary
 
@@ -62,7 +62,7 @@ This draft uses the following source-backed claims as of 2026-05-03:
 Use these markers in slide validation notes and asset requirements:
 
 - **[RESEARCHED]** Claim is supported by primary or product-owner documentation as of 2026-05-03.
-- **[TECHSPEC]** Content depends on [ProStateKit.md](ProStateKit.md) staying aligned with the deck.
+- **[TECHSPEC]** Content depends on [ProStateKit.md](docs/spec/ProStateKit.md) staying aligned with the deck.
 - **[REPO]** Content depends on a built ProStateKit repository, real file names, and real commands.
 - **[LAB]** Content depends on endpoint, Intune, ConfigMgr, or reboot lab validation.
 - **[REHEARSAL]** Content depends on captured demo output, screenshots, timing, and fallback artifacts.

@@ -7,7 +7,7 @@
 - **Owner:** Repository Maintainers
 - **Last Updated:** 2026-05-03
 - **Scope:** Tracks ProStateKit and deck work that remains after the preview repository scaffold. This file keeps unresolved questions explicit until they are resolved, lab-validated, or moved into a public issue.
-- **Related:** [ProStateKit Technical Specification](ProStateKit.md), [Deck Specification](DSCv3-14-deck-spec.md), [Completion Audit](docs/completion-audit.md), [Post-Public-Flip TODO](_TODO.md), [Demo Runbook](docs/runbooks/demo-runbook.md)
+- **Related:** [ProStateKit Technical Specification](docs/spec/ProStateKit.md), [Deck Specification](DSCv3-14-deck-spec.md), [Completion Audit](docs/completion-audit.md), [Post-Public-Flip TODO](_TODO.md), [Demo Runbook](docs/runbooks/demo-runbook.md)
 
 ## Current Position
 

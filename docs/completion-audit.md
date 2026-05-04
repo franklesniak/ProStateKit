@@ -7,7 +7,7 @@
 - **Owner:** Repository Maintainers
 - **Last Updated:** 2026-05-03
 - **Scope:** Maps the repository initialization and ProStateKit build objective to concrete artifacts, validation evidence, and remaining blockers.
-- **Related:** [Technical Specification](../ProStateKit.md), [Next Steps](../DSCv3-14a-next-steps.md), [Packaging](packaging.md), [Runtime Distribution](runtime-distribution.md)
+- **Related:** [Technical Specification](../docs/spec/ProStateKit.md), [Next Steps](../DSCv3-14a-next-steps.md), [Packaging](packaging.md), [Runtime Distribution](runtime-distribution.md)
 
 ## Objective
 

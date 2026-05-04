@@ -38,4 +38,4 @@ Invoke-Pester -Path tests/PowerShell -Output Detailed
 
 Examples must be synthetic, sanitized, and free of real endpoint, tenant, user, customer, or credential data. Bundle manifest examples keep literal `TBD` values until the pinned DSC version, build timestamp, source commit, and hashes are real.
 
-Current fixtures use `schemaVersion` `1.0.0` and the expanded ProStateKit evidence contract documented in [ProStateKit.md](../ProStateKit.md) and [docs/evidence-schema.md](../docs/evidence-schema.md). The smaller bootstrap field lists are treated as lower bounds, not separate supported schemas.
+Current fixtures use `schemaVersion` `1.0.0` and the expanded ProStateKit evidence contract documented in [ProStateKit.md](../docs/spec/ProStateKit.md) and [docs/evidence-schema.md](../docs/evidence-schema.md). The smaller bootstrap field lists are treated as lower bounds, not separate supported schemas.

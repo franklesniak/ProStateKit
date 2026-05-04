@@ -1890,7 +1890,7 @@ Describe -Name 'Documentation path consistency' -Fixture {
                 Pattern = '(?s)## Sample\s+```json\s+(?<json>.*?)\s+```'
             }
             @{
-                Path = Join-Path -Path $script:repoRoot -ChildPath 'ProStateKit.md'
+                Path = Join-Path -Path $script:repoRoot -ChildPath 'docs/spec/ProStateKit.md'
                 Pattern = '(?s)## Normalized Result Schema.*?```json\s+(?<json>.*?)\s+```'
             }
         )
@@ -2025,7 +2025,7 @@ Describe -Name 'Workflow guardrails' -Fixture {
 
     It -Name 'Release workflow remains manual and fail-closed while runtime is unpinned' -Test {
         $releaseWorkflowPath = Join-Path -Path $script:repoRoot -ChildPath '.github/workflows/release.yml'
-        $specPath = Join-Path -Path $script:repoRoot -ChildPath 'ProStateKit.md'
+        $specPath = Join-Path -Path $script:repoRoot -ChildPath 'docs/spec/ProStateKit.md'
         $releaseWorkflow = Get-Content -LiteralPath $releaseWorkflowPath -Raw
         $spec = Get-Content -LiteralPath $specPath -Raw
 
@@ -2881,7 +2881,7 @@ Describe -Name 'Project policy document guardrails' -Fixture {
 
 Describe -Name 'Documentation and prompt guardrails' -Fixture {
     It -Name 'Technical spec preserves goals non-goals and decision records' -Test {
-        $specPath = Join-Path -Path $script:repoRoot -ChildPath 'ProStateKit.md'
+        $specPath = Join-Path -Path $script:repoRoot -ChildPath 'docs/spec/ProStateKit.md'
         $spec = Get-Content -LiteralPath $specPath -Raw
         $requiredTerms = @(
             'PSK-G-001',
@@ -2928,7 +2928,7 @@ Describe -Name 'Documentation and prompt guardrails' -Fixture {
     }
 
     It -Name 'Technical spec keeps milestones open questions and acceptance criteria explicit' -Test {
-        $specPath = Join-Path -Path $script:repoRoot -ChildPath 'ProStateKit.md'
+        $specPath = Join-Path -Path $script:repoRoot -ChildPath 'docs/spec/ProStateKit.md'
         $spec = Get-Content -LiteralPath $specPath -Raw
         $requiredTerms = @(
             'M1 - Skeleton',
