@@ -1,4 +1,4 @@
-# yamllint configuration
+# yamllint configuration!
 #
 # The `truthy.check-keys: false` setting is intentional so GitHub Actions
 # workflow files can use the idiomatic unquoted `on:` key without yamllint

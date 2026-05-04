@@ -5,7 +5,7 @@
 # Source: https://github.com/DavidAnson/markdownlint
 #
 # Purpose: Enforce consistent Markdown formatting across the repository
-# Runs on: push and pull_request events
+# Runs on: push & pull_request events
 
 name: Markdown Lint
 

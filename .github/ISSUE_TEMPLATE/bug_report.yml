@@ -17,7 +17,7 @@ body:
     attributes:
       label: Pre-flight Checklist
       options:
-        - label: I searched existing issues and this is not a duplicate.
+        - label: I searched existing issues & this is not a duplicate.
           required: true
         - label: This is not a security vulnerability.
           required: true
